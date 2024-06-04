@@ -17,6 +17,15 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar( // Agregado AppBar
+        leading: IconButton( // Agregado IconButton
+          icon: const Icon(Icons.arrow_back), // Icono de flecha hacia atrás
+          onPressed: () {
+            Navigator.pop(context); // Navega hacia atrás en el stack de navegación
+          },
+        ),
+      ),
+      //TODO: Hay que transformar la lista para que se vea por paginas.
       body: FutureBuilder(
         future: getIncidents(),
         builder: (context, snapshot) {
@@ -24,15 +33,13 @@ class _HomeState extends State<Home> {
             return ListView.builder(
             itemCount: snapshot.data?.length ?? 0,
             itemBuilder: (context, index) {
-              //1.Dissmissible para eliminar la incidencia
               return Dismissible(
                 onDismissed: (direction) async{
                   deleteIncident(snapshot.data?[index]['id']);
                   snapshot.data?.removeAt(index);
                   setState(() {});
                 },
-                //2.Se asegura que no se eleminan las incidencias por error
-                confirmDismiss: (direction) async { 
+                confirmDismiss: (direction) async {
                   bool result = false;
                   result = await showDialog(
                     context: context,
