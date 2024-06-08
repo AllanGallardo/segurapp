@@ -149,6 +149,14 @@ class _CreatePageState extends State<CreatePage> {
 
             ElevatedButton(
               onPressed: () async{
+                if (descController.text.length < 50) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('La descripción debe tener al menos 50 caracteres'),
+                    ),
+                  );
+                  return;
+                }
                 DateTime ahora = DateTime.now();
                 String horaFormateada = DateFormat('dd/MM/yyyy kk:mm:ss').format(ahora);
                 fechaController.text = horaFormateada;
