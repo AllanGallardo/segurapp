@@ -34,13 +34,14 @@ class _MainPageState extends State<MainPage> {
     return await Geolocator.getCurrentPosition();
   }
 
-  void getCurrentLocation() async {
+  Future<LatLng> getCurrentLocation() async {
     Position position = await determinePosition();
     setState(() {
       myPosition = LatLng(position.latitude, position.longitude);
       // ignore: avoid_print
       print(myPosition);
     });
+    return myPosition!;
   }
 
   @override
@@ -63,6 +64,8 @@ class _MainPageState extends State<MainPage> {
             ? const CircularProgressIndicator()
             : FlutterMap(
                 options: MapOptions(
+                  initialCenter: myPosition!,
+                  initialZoom: 16,
                   onTap: (tapPosition, latLng) {
                     // Aquí puedes usar tapPosition y latLng
                     // Por ejemplo, puedes querer actualizar myPosition con latLng
@@ -120,7 +123,7 @@ class _MainPageState extends State<MainPage> {
                   myPosition = LatLng(position.latitude, position.longitude);
                 });
               },
-              backgroundColor: Color.fromARGB(255, 255, 3, 3),
+              backgroundColor: const Color.fromARGB(255, 255, 3, 3),
               child: const Icon(Icons.my_location),
             ),
           ),
