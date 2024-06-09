@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:segurapp/pages/update_page.dart';
 import 'package:segurapp/services/firebase.dart';
-
 import 'create_page.dart';
 
 class Home extends StatefulWidget {
@@ -49,7 +49,7 @@ class _HomeState extends State<Home> {
     var incidents = await getIncidents();
     setState(() {
       allIncidents = incidents;
-      filteredIncidents = incidents;
+      filteredIncidents = incidents.sublist(0, itemsPerPage);
       sortIncidents();
     });
   }
@@ -78,226 +78,149 @@ class _HomeState extends State<Home> {
   void sortIncidents() {
     setState(() {
       filteredIncidents.sort((a, b) {
-        DateTime dateA = dbDateFormat.parse(a['fecha']);
-        DateTime dateB = dbDateFormat.parse(b['fecha']);
-        return isAscending ? dateA.compareTo(dateB) : dateB.compareTo(dateA);
+        int compareResult = dbDateFormat.parse(a['fecha']).compareTo(dbDateFormat.parse(b['fecha']));
+        return isAscending ? compareResult : -compareResult;
       });
     });
   }
 
-  void resetFilters() {
-    setState(() {
-      selectedType = null;
-      selectedDate = null;
-      filteredIncidents = allIncidents;
-      sortIncidents();
-    });
+  Future<void> _showUpdatePage(BuildContext context, dynamic incident) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const UpdatePage(),
+        settings: RouteSettings(
+          arguments: {
+            incident['cliente'],
+            incident['fecha'],
+            incident['id'],
+            incident['descripcion'],
+            incident['tipo'],
+            incident['estado'],
+            incident['imagen'],
+          },
+        ),
+      ),
+    );
+
+    if (result == true) {
+      await loadIncidents();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text('Incidencias'),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (String result) {
-              setState(() {
-                if (result == 'Orden Ascendente') {
-                  isAscending = true;
-                } else {
-                  isAscending = false;
-                }
-                sortIncidents();
-              });
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'Orden Ascendente',
-                child: Text('Orden Ascendente'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'Orden Descendente',
-                child: Text('Orden Descendente'),
-              ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.filter_alt),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                builder: (context) {
-                  return Container(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        DropdownButtonFormField<String>(
-                          decoration: const InputDecoration(labelText: 'Tipo de Incidencia'),
-                          value: selectedType,
-                          items: const [
-                            DropdownMenuItem(value: 'robo', child: Text('Robo/Asalto')),
-                            DropdownMenuItem(value: 'extravio', child: Text('Extravío')),
-                            DropdownMenuItem(value: 'violencia', child: Text('Violencia Domestica')),
-                            DropdownMenuItem(value: 'accidente', child: Text('Accidente de Tránsito')),
-                            DropdownMenuItem(value: 'sospecha', child: Text('Actividad Sospechosa')),
-                            DropdownMenuItem(value: 'disturbio', child: Text('Disturbios')),
-                            DropdownMenuItem(value: 'incendio', child: Text('Incendio')),
-                            DropdownMenuItem(value: 'cortes', child: Text('Corte de Tránsito')),
-                            DropdownMenuItem(value: 'portonazo', child: Text('Portonazo')),
-                            DropdownMenuItem(value: 'otro', child: Text('Otro')),
-                          ],
-                          onChanged: (value) {
-                            setState(() {
-                              selectedType = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        ElevatedButton(
-                          onPressed: () async {
-                            DateTime? picked = await showDatePicker(
-                              context: context,
-                              initialDate: selectedDate ?? DateTime.now(),
-                              firstDate: DateTime(2000),
-                              lastDate: DateTime(2101),
-                            );
-                            if (picked != null) {
-                              setState(() {
-                                selectedDate = picked;
-                              });
-                            }
-                          },
-                          child: Text(selectedDate == null
-                              ? 'Seleccionar Fecha'
-                              : 'Fecha: ${dateFormat.format(selectedDate!)}'),
-                        ),
-                        const SizedBox(height: 8),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            filterIncidents();
-                          },
-                          child: const Text('Aplicar Filtros'),
-                        ),
-                        const SizedBox(height: 8),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            resetFilters();
-                          },
-                          child: const Text('Restablecer Filtros'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ],
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.redAccent,
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreatePage()),
+          );
+
+          if (result == true) {
+            await loadIncidents();
+          }
+        },
+        child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: filteredIncidents.isEmpty
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : ListView.builder(
-              controller: _scrollController,
-              itemCount: filteredIncidents.length + (currentPage + 1 < allIncidents.length / itemsPerPage ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == filteredIncidents.length) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                DateTime incidentDate = dbDateFormat.parse(filteredIncidents[index]['fecha']);
-                return Dismissible(
-                  onDismissed: (direction) async {
-                    deleteIncident(filteredIncidents[index]['id']);
+      appBar: AppBar(
+        title: const Text('Listado de Incidencias'),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                DropdownButton<String>(
+                  hint: const Text('Filtrar por tipo'),
+                  value: selectedType,
+                  items: ['Tipo1', 'Tipo2', 'Tipo3'].map((String type) {
+                    return DropdownMenuItem<String>(
+                      value: type,
+                      child: Text(type),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
                     setState(() {
-                      filteredIncidents.removeAt(index);
+                      selectedType = newValue;
+                      filterIncidents();
                     });
                   },
-                  confirmDismiss: (direction) async {
-                    bool result = false;
-                    result = await showDialog(
+                ),
+                const SizedBox(width: 8.0),
+                ElevatedButton(
+                  onPressed: () async {
+                    final DateTime? pickedDate = await showDatePicker(
                       context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: const Text('Confirmar'),
-                          content: const Text('¿Está seguro que desea eliminar esta incidencia?'),
-                          actions: [
-                            TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context, false);
-                                },
-                                child: const Text('No')),
-                            TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context, true);
-                                },
-                                child: const Text('Sí, eliminar')),
-                          ],
-                        );
-                      },
+                      initialDate: selectedDate ?? DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
                     );
-                    return result;
+                    if (pickedDate != null) {
+                      setState(() {
+                        selectedDate = pickedDate;
+                        filterIncidents();
+                      });
+                    }
                   },
-                  key: Key(filteredIncidents[index]['id'] ?? ''),
-                  direction: DismissDirection.endToStart,
-                  background: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    margin: const EdgeInsets.all(8.0),
-                    child: const Icon(Icons.delete),
+                  child: Text(selectedDate == null
+                      ? 'Filtrar por fecha'
+                      : dateFormat.format(selectedDate!)),
+                ),
+                const SizedBox(width: 8.0),
+                IconButton(
+                  icon: Icon(isAscending ? Icons.arrow_upward : Icons.arrow_downward),
+                  onPressed: () {
+                    setState(() {
+                      isAscending = !isAscending;
+                      sortIncidents();
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              itemCount: filteredIncidents.length + 1,
+              itemBuilder: (context, index) {
+                if (index == filteredIncidents.length) {
+                  return filteredIncidents.length < allIncidents.length
+                      ? const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      : const SizedBox.shrink();
+                }
+
+                final incident = filteredIncidents[index];
+                return ListTile(
+                  title: Text(
+                    'Cliente: ${incident['cliente']}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  child: Container(
-                    margin: const EdgeInsets.all(8.0),
-                    child: ListTile(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: const BorderSide(color: Colors.black),
-                      ),
-                      title: Text(filteredIncidents[index]['cliente']),
-                      subtitle: Text(dateFormat.format(incidentDate)),
-                      onTap: () async {
-                        await Navigator.pushNamed(context, '/update', arguments: {
-                          filteredIncidents[index]['cliente'] ?? '',
-                          filteredIncidents[index]['fecha'] ?? '',
-                          filteredIncidents[index]['id'],
-                          filteredIncidents[index]['descripcion'],
-                          filteredIncidents[index]['tipo'],
-                          filteredIncidents[index]['estado'],
-                          filteredIncidents[index]['imagen'] ?? ''
-                        });
-                        loadIncidents();
-                      },
-                    ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Descripción: ${incident['descripcion']}'),
+                      Text('Fecha: ${incident['fecha']}'),
+                      Text('Tipo: ${incident['tipo']}'),
+                      Text('Estado: ${incident['estado']}'),
+                      if (incident['estado'] == 'Cerrada' && incident['fechaCierre'] != null)
+                        Text('Fecha de cierre: ${incident['fechaCierre']}'),
+                    ],
+                  ),
+                  trailing: ElevatedButton(
+                    child: const Text('Modificar'),
+                    onPressed: () => _showUpdatePage(context, incident),
                   ),
                 );
               },
             ),
-      floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CreatePage(),
-                ),
-              );
-              loadIncidents();
-            },
-            child: const Icon(Icons.add),
           ),
         ],
       ),
