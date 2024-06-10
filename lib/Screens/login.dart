@@ -17,12 +17,12 @@ class LoginPageState extends State<LoginPage> {
   final FirebaseAuthServices _auth = FirebaseAuthServices();
   final _emailController = TextEditingController();
   final _contrasenaController = TextEditingController();
-  
+  bool _passwordVisible = false;
+
   @override
-  void dispose() {
-    _emailController.dispose();
-    _contrasenaController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _passwordVisible = false; // Inicializar la variable
   }
 
   @override
@@ -34,7 +34,7 @@ class LoginPageState extends State<LoginPage> {
           textAlign: TextAlign.center,
         ),
         centerTitle: true, // Centrar el título en la AppBar
-        backgroundColor: const Color.fromARGB(255, 32, 133, 192),
+        backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -66,13 +66,18 @@ class LoginPageState extends State<LoginPage> {
                   );
                 }
               },
+                style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white, backgroundColor: Colors.lightBlue, 
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.0), // Bordes redondeados
+              ),
+  ),
               child: const Text("Iniciar sesión"),
             ),
             const SizedBox(height: 20),
             GestureDetector(
               onTap: () {
-                Navigator.pushNamed
-                (context, '/registro');
+                Navigator.pushNamed(context, '/registro');
               },
               child: RichText(
                 text: const TextSpan(
@@ -112,6 +117,7 @@ class LoginPageState extends State<LoginPage> {
             ),
             keyboardType: TextInputType.emailAddress,
             maxLength: 32,
+            autofocus: true, // Habilitar autofocus aquí
             validator: (value) {
               if (value!.isEmpty) {
                 return 'Por favor ingrese su correo electrónico';
@@ -128,9 +134,19 @@ class LoginPageState extends State<LoginPage> {
           Icons.remove_red_eye,
           TextFormField(
             controller: _contrasenaController,
-            obscureText: true,
-            decoration: const InputDecoration(
+            obscureText: !_passwordVisible, // Usar la variable para controlar
+            decoration: InputDecoration(
               labelText: 'Contraseña',
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _passwordVisible = !_passwordVisible;
+                  });
+                },
+              ),
             ),
             validator: (value) {
               if (value!.isEmpty) {
