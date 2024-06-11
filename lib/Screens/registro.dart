@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:segurapp/services/firebase_auth_services.dart';
 
 class RegistroPage extends StatefulWidget {
-  const RegistroPage({Key? key});
+  const RegistroPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _RegistroPageState createState() => _RegistroPageState();
 }
 

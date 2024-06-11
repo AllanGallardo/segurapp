@@ -14,6 +14,7 @@ import 'package:segurapp/Screens/gestion_perfil.dart';
 import 'package:segurapp/Screens/login.dart';
 import 'package:segurapp/Screens/mainScreen.dart';
 import 'package:segurapp/Screens/registro.dart';
+import 'package:segurapp/Screens/ListPage.dart';
 //import 'package:flutter_map/flutter_map.dart';
 
 void main() async{
@@ -35,13 +36,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      initialRoute: '/ListPage',
       routes: {
         '/': (context) => const LoginPage(),
         '/registro': (context) => const RegistroPage(),
         '/mainScreen': (context) => const MainPage(),
         '/editarperfil': (context) => EditProfileScreen(userProfile: UserProfile(email: '', name: '', lastName: '', mobileNumber: '', language: '', country: '', city: '', address: '')),
         '/DescriptionPage':(context) => const Home(),
+        '/ListPage':(context) => const Feed(),
         '/create': (context) => const CreatePage(),
         '/update': (context) => const UpdatePage(),
         '/experimental': (context) => const ExperimentalPage(),

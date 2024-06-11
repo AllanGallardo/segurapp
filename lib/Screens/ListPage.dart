@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:segurapp/pages/update_page.dart';
 import 'package:segurapp/services/firebase.dart';
-import 'create_page.dart';
+import 'package:segurapp/Screens/ListPage_Deploy.dart';
 
-class Home extends StatefulWidget {
-  const Home({
+class Feed extends StatefulWidget {
+  const Feed({
     super.key,
   });
 
   @override
-  State<Home> createState() => _HomeState();
+  State<Feed> createState() => _FeedState();
 }
 
-class _HomeState extends State<Home> {
+class _FeedState extends State<Feed> {
   String? selectedType;
   DateTime? selectedDate;
   List<dynamic> allIncidents = [];
@@ -84,11 +83,11 @@ class _HomeState extends State<Home> {
     });
   }
 
-  Future<void> _showUpdatePage(BuildContext context, dynamic incident) async {
+  Future<void> _showListPage(BuildContext context, dynamic incident) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const UpdatePage(),
+        builder: (context) => const DeployFeed(),
         settings: RouteSettings(
           arguments: {
             incident['cliente'],
@@ -111,22 +110,9 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.redAccent,
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CreatePage()),
-          );
-
-          if (result == true) {
-            await loadIncidents();
-          }
-        },
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
       appBar: AppBar(
-        title: const Text('Listado de Incidencias'),
+        backgroundColor:  const Color.fromARGB(255, 32, 133, 192),
+        title: const Text('Feed de incidencias'),
       ),
       body: Column(
         children: [
@@ -137,12 +123,24 @@ class _HomeState extends State<Home> {
                 DropdownButton<String>(
                   hint: const Text('Filtrar por tipo'),
                   value: selectedType,
-                  items: ['Tipo1', 'Tipo2', 'Tipo3'].map((String type) {
-                    return DropdownMenuItem<String>(
-                      value: type,
-                      child: Text(type),
-                    );
-                  }).toList(),
+                  items: [
+                      {'id': 'robo', 'displayValue': 'Robo/Asalto'},
+                      {'id': 'extravio', 'displayValue': 'Extravío'},
+                      {'id': 'violencia', 'displayValue': 'Violencia doméstica'},
+                      {'id': 'accidente', 'displayValue': 'Accidente de tránsito'},
+                      {'id': 'sospecha', 'displayValue': 'Actividad sospechosa'},
+                      {'id': 'disturbio', 'displayValue': 'Disturbios'},
+                      {'id': 'incendio', 'displayValue': 'Incendio'},
+                      {'id': 'cortes', 'displayValue': 'Corte de tránsito'},
+                      {'id': 'portonazo', 'displayValue': 'Portonazo'},
+                      {'id': 'otro', 'displayValue': 'Otro...'},
+                      // Agrega más elementos aquí
+                    ].map((Map<String, String> item) {
+                      return DropdownMenuItem<String>(
+                        value: item['id'],
+                        child: Text(item['displayValue']!),
+                      );
+                    }).toList(),
                   onChanged: (String? newValue) {
                     setState(() {
                       selectedType = newValue;
@@ -150,14 +148,14 @@ class _HomeState extends State<Home> {
                     });
                   },
                 ),
-                const SizedBox(width: 8.0),
+                const SizedBox(width: 4.0),
                 ElevatedButton(
                   onPressed: () async {
                     final DateTime? pickedDate = await showDatePicker(
                       context: context,
                       initialDate: selectedDate ?? DateTime.now(),
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
+                      firstDate: DateTime(2024),
+                      lastDate: DateTime(2030),
                     );
                     if (pickedDate != null) {
                       setState(() {
@@ -171,7 +169,8 @@ class _HomeState extends State<Home> {
                       : dateFormat.format(selectedDate!)),
                 ),
                 const SizedBox(width: 8.0),
-                IconButton(
+                Expanded(
+                  child: IconButton(
                   icon: Icon(isAscending ? Icons.arrow_upward : Icons.arrow_downward),
                   onPressed: () {
                     setState(() {
@@ -179,6 +178,7 @@ class _HomeState extends State<Home> {
                       sortIncidents();
                     });
                   },
+                )
                 ),
               ],
             ),
@@ -198,25 +198,40 @@ class _HomeState extends State<Home> {
                 }
 
                 final incident = filteredIncidents[index];
-                return ListTile(
-                  title: Text(
-                    'Cliente: ${incident['cliente']}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Descripción: ${incident['descripcion']}'),
-                      Text('Fecha: ${incident['fecha']}'),
-                      Text('Tipo: ${incident['tipo']}'),
-                      Text('Estado: ${incident['estado']}'),
-                      if (incident['estado'] == 'Cerrada' && incident['fechaCierre'] != null)
-                        Text('Fecha de cierre: ${incident['fechaCierre']}'),
-                    ],
-                  ),
-                  trailing: ElevatedButton(
-                    child: const Text('Modificar'),
-                    onPressed: () => _showUpdatePage(context, incident),
+                return InkWell(
+                  onTap: () => _showListPage(context, incident),
+                  child: ListTile(
+                    title: Text(
+                      'Usuario: ${incident['cliente']}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Descripción: ${incident['descripcion']}'),
+                        Text('Fecha: ${incident['fecha']}'), //Podria quitarse perfectamente si establecemos un limite de tiempo para las incidencias de la ultima semana por ejemplo
+                          if (incident['tipo']=='robo')
+                            const Text('Categoría de la incidencia: Robo/Asalto'),
+                          if (incident['tipo']=='extravio')
+                            const Text('Categoría de la incidencia: Extravío'),
+                          if (incident['tipo']=='violencia')
+                            const Text('Categoría de la incidencia: Violencia doméstica'),
+                          if (incident['tipo']=='accidente')
+                            const Text('Categoría de la incidencia: Accidente de tránsito'),
+                          if (incident['tipo']=='sospecha')
+                            const Text('Categoría de la incidencia: Actividad sospechosa'),
+                          if (incident['tipo']=='disturbio')
+                            const Text('Categoría de la incidencia: Disturbios'),
+                          if (incident['tipo']=='incendio')
+                            const Text('Categoría de la incidencia: Incendio'),
+                          if (incident['tipo']=='cortes')
+                            const Text('Categoría de la incidencia: Corte de tránsito'),
+                          if (incident['tipo']=='portonazo')
+                            const Text('Categoría de la incidencia: Portonazo'),
+                          if (incident['tipo']=='otro')
+                            const Text('Categoría de la incidencia: Otro...'),
+                      ],
+                    ),
                   ),
                 );
               },
