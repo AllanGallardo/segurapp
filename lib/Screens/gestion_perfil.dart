@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:segurapp/Screens/navbar.dart';
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class UserProfile {
@@ -27,6 +27,8 @@ class UserProfile {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -53,10 +55,10 @@ class MyApp extends StatelessWidget {
 class EditProfileScreen extends StatefulWidget {
   final UserProfile userProfile;
 
-  EditProfileScreen({required this.userProfile});
+  const EditProfileScreen({super.key, required this.userProfile});
 
   @override
-  _EditProfileScreenState createState() => _EditProfileScreenState();
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
 class _EditProfileScreenState extends State<EditProfileScreen> {
