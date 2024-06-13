@@ -21,7 +21,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   LatLng? myPosition;
-
+  
   Future<Position> determinePosition() async {
     LocationPermission permission;
     permission = await Geolocator.checkPermission();
@@ -51,7 +51,9 @@ class _MainPageState extends State<MainPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context){
+    String? positionLatitude;
+    String? positionLongitude;
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -61,9 +63,23 @@ class _MainPageState extends State<MainPage> {
       body: Stack(
         children: <Widget>[
           myPosition == null
-            ? const CircularProgressIndicator()
-            : FlutterMap(
+            ? const SafeArea(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(),]
+                  )
+                )
+              )
+              :FlutterMap(
                 options: MapOptions(
+                  onMapReady: (){
+                    positionLatitude = myPosition!.latitude.toString();
+                    positionLongitude = myPosition!.longitude.toString();
+                    print ('Latitud: $positionLatitude, Longitud: $positionLongitude');
+                    setState(() {});
+                  },
                   initialCenter: myPosition!,
                   initialZoom: 16,
                   onTap: (tapPosition, latLng) {
@@ -93,7 +109,7 @@ class _MainPageState extends State<MainPage> {
                         height: 80.0,
                         point: myPosition!,
                         child: const Icon(
-                          Icons.person_pin,
+                          Icons.person_pin_circle_rounded,
                           color: Color.fromARGB(255, 104, 144, 212),
                           size: 40,
                         ),
@@ -106,6 +122,7 @@ class _MainPageState extends State<MainPage> {
             top: 10.0,
             right: 10.0,
             child: FloatingActionButton(
+              heroTag: 'panic',
               onPressed: () {
                 // Aquí va tu código para el botón de pánico
               },
@@ -129,9 +146,10 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
       ),
-      bottomNavigationBar: CustomNavigationBar(
-        context: context,
-      ),
-    );
+      bottomNavigationBar: FutureBuilder(
+        future: getCurrentLocation(), 
+        builder: (context, snapshot){
+          return CustomNavigationBar(context: context, latitude: positionLatitude, longitude: positionLongitude);
+        }));
   }
 }

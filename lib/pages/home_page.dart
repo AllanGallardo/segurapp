@@ -16,6 +16,8 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
+    final datos = ModalRoute.of(context)!.settings.arguments;
+    print('EL RICARDO SE COME AL JAIME Y LOS DATOS SON  $datos');
     return Scaffold(
       appBar: AppBar( // Agregado AppBar
         leading: IconButton( // Agregado IconButton
@@ -85,13 +87,14 @@ class _HomeState extends State<Home> {
                     subtitle: Text(snapshot.data?[index]['fecha']??''),
                     onTap: () async {
                       await Navigator.pushNamed(context, '/update', arguments:{
-                      snapshot.data?[index]['cliente']??'',
-                      snapshot.data?[index]['fecha']??'',
-                      snapshot.data?[index]['id'],
-                      snapshot.data?[index]['descripcion'],
-                      snapshot.data?[index]['tipo'],
-                      snapshot.data?[index]['estado'],
-                      snapshot.data?[index]['imagen']??''
+                        datos,
+                        snapshot.data?[index]['cliente']??'',
+                        snapshot.data?[index]['fecha']??'',
+                        snapshot.data?[index]['id'],
+                        snapshot.data?[index]['descripcion'],
+                        snapshot.data?[index]['tipo'],
+                        snapshot.data?[index]['estado'],
+                        snapshot.data?[index]['imagen']??''
                       });
                       //Actualizar la lista de incidencias
                       setState(() {});
