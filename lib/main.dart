@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/ListPage',
+      initialRoute: '/',
       routes: {
         '/': (context) => const LoginPage(),
         '/registro': (context) => const RegistroPage(),

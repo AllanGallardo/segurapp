@@ -46,7 +46,7 @@ Text categorizeIncident(String tipo) {
   }
 }
 
-    return Scaffold(
+  return Scaffold(
       appBar: AppBar(
         title: const Text('Información detallada'),
       ),
@@ -55,41 +55,6 @@ Text categorizeIncident(String tipo) {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  const Text('Pulsa para reportar la incidencia'),
-                  IconButton(
-                    icon: const Icon(Icons.error),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Confirmación'),
-                            content: const Text('¿Estás seguro de que quieres reportar la incidencia?'),
-                            actions: <Widget>[
-                              TextButton(
-                                child: const Text('Cancelar'),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                              TextButton(
-                                child: const Text('Confirmar'),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  // Aquí puedes poner el código para reportar la incidencia
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
               Container(
                 padding: const EdgeInsets.all(8.0),
                 width: 360,
@@ -125,8 +90,6 @@ Text categorizeIncident(String tipo) {
                   borderRadius: BorderRadius.circular(5.0),
                 ),
                 child: categorizeIncident(tipoData),
-                
-                
               ),
               Container(
                 margin: const EdgeInsets.all(10),
@@ -148,18 +111,67 @@ Text categorizeIncident(String tipo) {
                         ),
                       ),
               ),
-              Row(
-                children: <Widget>[
-                  IconButton(
-                    icon: const Icon(Icons.check_box,color: Colors.green,),
-                    onPressed: () {
-                      setState(() {
-                        _counter++;
-                      });
-                    },
-                  ),
-                  Text('$_counter'),
-                ],
+              Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        Tooltip(
+                          message: 'Confirmar',
+                          child: IconButton(
+                            icon: const Icon(Icons.check_box, color: Colors.green, size: 30),
+                            onPressed: () {
+                              setState(() {
+                                _counter++;
+                              });
+                            },
+                          ),
+                        ),
+                        Text('$_counter'), //Counter que debería mostrar las confirmaciones
+                      ],
+                    ),
+                    const SizedBox(width: 10),
+                    Row(
+                      children: <Widget>[
+                        Tooltip(
+                          message: 'Reportar incidencia',
+                          child: IconButton(
+                            icon: const Icon(Icons.error, color: Colors.red, size: 30),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text('Confirmación'),
+                                    content: const Text('¿Estás seguro de que quieres reportar la incidencia?'),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        child: const Text('Cancelar'),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                      TextButton(
+                                        child: const Text('Confirmar'),
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                          // Aquí puedes poner el código para reportar la incidencia
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                        Text('$_counter'), //Texto que deberia mostrar los reportes actuales
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

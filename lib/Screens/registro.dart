@@ -141,7 +141,7 @@ class _RegistroPageState extends State<RegistroPage> {
                     ElevatedButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          bool success = await _signUp(context);
+                          bool success = await _signUp();
                           if (success) {
                             if(context.mounted){
                               Navigator.pop(context);
