@@ -14,38 +14,40 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  String? selectedType;
-  DateTime? selectedDate;
-  List<dynamic> allIncidents = [];
-  List<dynamic> filteredIncidents = [];
-  bool isAscending = true;
-  int currentPage = 0;
-  final int itemsPerPage = 10;
-  final ScrollController _scrollController = ScrollController();
+  String? selectedType; // Almacena el tipo seleccionado del filtro
+  DateTime? selectedDate; // Almacena la fecha seleccionada del filtro
+  List<dynamic> allIncidents = []; // Lista de todas las incidencias
+  List<dynamic> filteredIncidents = []; // Lista de incidencias filtradas y paginadas
+  bool isAscending = true; // Indica el orden de clasificación de las incidencias
+  int currentPage = 0; // Página actual de la paginación
+  final int itemsPerPage = 10; // Número de elementos por página
+  final ScrollController _scrollController = ScrollController(); // Controlador de scroll para la lista
 
-  final DateFormat dateFormat = DateFormat('dd/MM/yyyy');
-  final DateFormat dbDateFormat = DateFormat('dd/MM/yyyy HH:mm:ss');
+  final DateFormat dateFormat = DateFormat('dd/MM/yyyy'); // Formato de fecha para mostrar
+  final DateFormat dbDateFormat = DateFormat('dd/MM/yyyy HH:mm:ss'); // Formato de fecha para la base de datos
 
   @override
   void initState() {
     super.initState();
-    loadIncidents();
-    _scrollController.addListener(_onScroll);
+    loadIncidents(); // Cargar incidencias al inicializar el estado
+    _scrollController.addListener(_onScroll); // Agregar listener para detectar scroll
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _scrollController.dispose(); // Eliminar el controlador de scroll al destruir el estado
     super.dispose();
   }
 
   void _onScroll() {
+    // Detecta cuando el usuario llega al final del scroll y carga más incidencias si es necesario
     if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
       loadMoreIncidents();
     }
   }
 
   Future<void> loadIncidents() async {
+    // Carga todas las incidencias desde la base de datos
     var incidents = await getIncidents();
     setState(() {
       allIncidents = incidents;
@@ -55,6 +57,7 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> loadMoreIncidents() async {
+    // Carga más incidencias para la paginación
     if ((currentPage + 1) * itemsPerPage < allIncidents.length) {
       setState(() {
         currentPage++;
@@ -64,6 +67,7 @@ class _HomeState extends State<Home> {
   }
 
   void filterIncidents() {
+    // Filtra las incidencias según el tipo y la fecha seleccionada
     setState(() {
       filteredIncidents = allIncidents.where((incident) {
         DateTime incidentDate = dbDateFormat.parse(incident['fecha']);
@@ -76,6 +80,7 @@ class _HomeState extends State<Home> {
   }
 
   void sortIncidents() {
+    // Ordena las incidencias por fecha
     setState(() {
       filteredIncidents.sort((a, b) {
         int compareResult = dbDateFormat.parse(a['fecha']).compareTo(dbDateFormat.parse(b['fecha']));
@@ -85,6 +90,7 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _showUpdatePage(BuildContext context, dynamic incident) async {
+    // Navega a la página de actualización de incidencia
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -108,6 +114,94 @@ class _HomeState extends State<Home> {
     }
   }
 
+  Widget _buildPagination() {
+    // Construye los botones de paginación
+    int totalPages = (allIncidents.length / itemsPerPage).ceil(); // Calcula el total de páginas
+    List<Widget> pageButtons = []; // Lista de botones de páginas
+
+    for (int i = 0; i < totalPages; i++) {
+      pageButtons.add(
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: const CircleBorder(), // Forma circular
+              padding: const EdgeInsets.all(12.0), // Tamaño del botón
+              minimumSize: const Size(40, 40), // Tamaño mínimo
+            ),
+            onPressed: currentPage != i
+                ? () {
+                    setState(() {
+                      currentPage = i;
+                      filteredIncidents = allIncidents.sublist(
+                        currentPage * itemsPerPage,
+                        (currentPage + 1) * itemsPerPage > allIncidents.length
+                            ? allIncidents.length
+                            : (currentPage + 1) * itemsPerPage,
+                      );
+                    });
+                  }
+                : null,
+            child: Text('${i + 1}'),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: currentPage > 0
+              ? () {
+                  setState(() {
+                    currentPage--;
+                    filteredIncidents = allIncidents.sublist(
+                      currentPage * itemsPerPage,
+                      (currentPage + 1) * itemsPerPage > allIncidents.length
+                          ? allIncidents.length
+                          : (currentPage + 1) * itemsPerPage,
+                    );
+                  });
+                }
+              : null,
+        ),
+        ...pageButtons,
+        IconButton(
+          icon: const Icon(Icons.arrow_forward),
+          onPressed: (currentPage + 1) * itemsPerPage < allIncidents.length
+              ? () {
+                  setState(() {
+                    currentPage++;
+                    filteredIncidents = allIncidents.sublist(
+                      currentPage * itemsPerPage,
+                      (currentPage + 1) * itemsPerPage > allIncidents.length
+                          ? allIncidents.length
+                          : (currentPage + 1) * itemsPerPage,
+                    );
+                  });
+                }
+              : null,
+        ),
+        IconButton(
+          icon: const Icon(Icons.last_page),
+          onPressed: currentPage < totalPages - 1
+              ? () {
+                  setState(() {
+                    currentPage = totalPages - 1;
+                    filteredIncidents = allIncidents.sublist(
+                      currentPage * itemsPerPage,
+                      allIncidents.length,
+                    );
+                  });
+                }
+              : null,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -124,6 +218,12 @@ class _HomeState extends State<Home> {
           }
         },
         child: const Icon(Icons.add, color: Colors.white),
+        // Tamaño y posición del FloatingActionButton
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        elevation: 10.0,
+        splashColor: Colors.red,
       ),
       appBar: AppBar(
         title: const Text('Listado de Incidencias'),
@@ -222,6 +322,8 @@ class _HomeState extends State<Home> {
               },
             ),
           ),
+          // Barra de paginación
+          _buildPagination(),
         ],
       ),
     );
