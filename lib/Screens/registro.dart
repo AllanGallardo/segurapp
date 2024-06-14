@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, use_build_context_synchronously
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +8,7 @@ class RegistroPage extends StatefulWidget {
   const RegistroPage({super.key});
 
   @override
-  State<RegistroPage> createState() => _RegistroPageState();
+  _RegistroPageState createState() => _RegistroPageState();
 }
 
 class _RegistroPageState extends State<RegistroPage> {
@@ -143,18 +143,14 @@ class _RegistroPageState extends State<RegistroPage> {
                         if (_formKey.currentState!.validate()) {
                           bool success = await _signUp();
                           if (success) {
-                            if(context.mounted){
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Usuario registrado con éxito')),
-                              );
-                            }
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Usuario registrado con éxito')),
+                            );
                           } else {
-                            if(context.mounted){
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Error al registrar usuario')),
-                              );
-                            }
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Error al registrar usuario')),
+                            );
                           }
                         }
                       },
@@ -196,7 +192,7 @@ class _RegistroPageState extends State<RegistroPage> {
     String password = _contrasenaController.text;
 
     try {
-      User? user = await _auth.signUpWithEmailAndPassword(email, password);
+      User? user = await _auth.signUpWithEmailAndPassword(email, password, nombre, apellido, telefono);
       if (user != null) {
         print('Usuario registrado con éxito');
         return true;
@@ -223,19 +219,15 @@ class _RegistroPageState extends State<RegistroPage> {
           errorMessage = 'Ocurrió un error desconocido.';
       }
       print('Error de registro: ${e.message}');
-      if(context.mounted){
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error de registro: $errorMessage')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error de registro: $errorMessage')),
+      );
       return false;
     } catch (e) {
       print('Error de registro: $e');
-      if(context.mounted){
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error de registro: $e')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error de registro: $e')),
+      );
       return false;
     }
   }
