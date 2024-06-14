@@ -107,6 +107,94 @@ class _FeedState extends State<Feed> {
     }
   }
 
+  Widget _buildPagination() {
+    // Construye los botones de paginación
+    int totalPages = (allIncidents.length / itemsPerPage).ceil(); // Calcula el total de páginas
+    List<Widget> pageButtons = []; // Lista de botones de páginas
+
+    for (int i = 0; i < totalPages; i++) {
+      pageButtons.add(
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: const CircleBorder(), // Forma circular
+              padding: const EdgeInsets.all(12.0), // Tamaño del botón
+              minimumSize: const Size(40, 40), // Tamaño mínimo
+            ),
+            onPressed: currentPage != i
+                ? () {
+                    setState(() {
+                      currentPage = i;
+                      filteredIncidents = allIncidents.sublist(
+                        currentPage * itemsPerPage,
+                        (currentPage + 1) * itemsPerPage > allIncidents.length
+                            ? allIncidents.length
+                            : (currentPage + 1) * itemsPerPage,
+                      );
+                    });
+                  }
+                : null,
+            child: Text('${i + 1}'),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: currentPage > 0
+              ? () {
+                  setState(() {
+                    currentPage--;
+                    filteredIncidents = allIncidents.sublist(
+                      currentPage * itemsPerPage,
+                      (currentPage + 1) * itemsPerPage > allIncidents.length
+                          ? allIncidents.length
+                          : (currentPage + 1) * itemsPerPage,
+                    );
+                  });
+                }
+              : null,
+        ),
+        ...pageButtons,
+        IconButton(
+          icon: const Icon(Icons.arrow_forward),
+          onPressed: (currentPage + 1) * itemsPerPage < allIncidents.length
+              ? () {
+                  setState(() {
+                    currentPage++;
+                    filteredIncidents = allIncidents.sublist(
+                      currentPage * itemsPerPage,
+                      (currentPage + 1) * itemsPerPage > allIncidents.length
+                          ? allIncidents.length
+                          : (currentPage + 1) * itemsPerPage,
+                    );
+                  });
+                }
+              : null,
+        ),
+        IconButton(
+          icon: const Icon(Icons.last_page),
+          onPressed: currentPage < totalPages - 1
+              ? () {
+                  setState(() {
+                    currentPage = totalPages - 1;
+                    filteredIncidents = allIncidents.sublist(
+                      currentPage * itemsPerPage,
+                      allIncidents.length,
+                    );
+                  });
+                }
+              : null,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -237,6 +325,7 @@ class _FeedState extends State<Feed> {
               },
             ),
           ),
+          _buildPagination(),
         ],
       ),
     );
