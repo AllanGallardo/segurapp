@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:intl/intl.dart';
 import '../services/firebase.dart';
 
 class UpdatePage extends StatefulWidget {
@@ -10,29 +10,26 @@ class UpdatePage extends StatefulWidget {
 }
 
 class _UpdatePageState extends State<UpdatePage> {
-
-  TextEditingController clientController = TextEditingController(text: '' );
-  TextEditingController fechaController = TextEditingController(text: '' );
-  TextEditingController descController = TextEditingController(text: '' );
+  TextEditingController clientController = TextEditingController(text: '');
+  TextEditingController fechaController = TextEditingController(text: '');
+  TextEditingController descController = TextEditingController(text: '');
   TextEditingController tipoController = TextEditingController(text: '');
   TextEditingController estadoController = TextEditingController(text: '');
+  DateTime? fechaCierre;
+
+  final DateFormat dateFormat = DateFormat('dd/MM/yyyy HH:mm:ss');
 
   @override
   Widget build(BuildContext context) {
-    //Acceder a los argumentos pasados por el ModalRoute
     final arguments = ModalRoute.of(context)!.settings.arguments as Set<dynamic>;
     List<dynamic> argumentsList = arguments.toList();
-    //Dentro de la lista, se obtienen los datos del cliente y la fecha en las posiciones 0 y 1, respectivamente
     final clienteData = argumentsList[0];
     final fechaData = argumentsList[1];
     final descData = argumentsList[3];
-    //tipos = argumentsList[4]; //Con esto consigo mostrar el tipo actual al ser mostrado pero si lo descomento genera un error que no deja modificar campos.
-    //estado = argumentsList[5]; //lo mismo con esto, para solucionarlo usaré TextEditingController para trabajar estas partes
     final tipoData = argumentsList[4];
     final estadoData = argumentsList[5];
     final imagen = argumentsList[6];
 
-    //Se inicializan los controllers para el TextField, con los datos previos recuperados
     clientController.text = clienteData;
     fechaController.text = fechaData;
     descController.text = descData;
@@ -64,10 +61,8 @@ class _UpdatePageState extends State<UpdatePage> {
           );
 
           if (confirmed ?? false) {
-            // Si confimamos la eliminación, llamamos a la función deleteIncident
             await deleteIncident(argumentsList[2]);
-            // ignore: use_build_context_synchronously
-            Navigator.pop(context); // Volvemos al menú principal
+            Navigator.pop(context);
           }
         },
         child: const Icon(Icons.delete, color: Colors.white),
@@ -76,83 +71,86 @@ class _UpdatePageState extends State<UpdatePage> {
         title: const Text('Modificar Incidencia'),
       ),
       body: Padding(
-      padding: const EdgeInsets.only(left: 16.0, right: 16.0),
-      child: SingleChildScrollView( // Agregado SingleChildScrollView
-        child: Column(
-          children: [
-            TextField( 
-              controller: clientController,
-              decoration: const InputDecoration(
-                labelText: 'Ingrese nombre del usuario',
+        padding: const EdgeInsets.only(left: 16.0, right: 16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(
+                controller: clientController,
+                decoration: const InputDecoration(
+                  labelText: 'Ingrese nombre del usuario',
+                ),
               ),
-            ),
-        
-            TextField( 
-              controller: fechaController,
-              decoration: const InputDecoration(
-                labelText: 'Ingrese la fecha de la incidencia',
+              TextField(
+                controller: fechaController,
+                decoration: const InputDecoration(
+                  labelText: 'Ingrese la fecha de la incidencia',
+                ),
               ),
-            ),
-
-            TextField( 
-              controller: descController,
-              decoration: const InputDecoration(
-                labelText: 'Descripción de la incidencia',
+              TextField(
+                controller: descController,
+                decoration: const InputDecoration(
+                  labelText: 'Descripción de la incidencia',
+                ),
               ),
-            ),
-
-            TextField( 
-              controller: tipoController,
-              decoration: const InputDecoration(
-                labelText: 'Tipo de incidencia',
+              TextField(
+                controller: tipoController,
+                decoration: const InputDecoration(
+                  labelText: 'Tipo de incidencia',
+                ),
               ),
-            ),
-            
-            Container(
-              margin: const EdgeInsets.all(10),
-              height: 200,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.black),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: imagen != ''
-                  ? Image.network(imagen!) // Mostrar imagen si está existe
-                  : const Center(
-                      child: Text(// Mostrar texto si no hay imagen
-                        "Imagen no seleccionada",
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
+              Container(
+                margin: const EdgeInsets.all(10),
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: imagen != ''
+                    ? Image.network(imagen)
+                    : const Center(
+                        child: Text(
+                          "Imagen no seleccionada",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
-                    ), 
-            ),
-             ElevatedButton(
-              onPressed: () {
-                if (estadoController.text == 'Abierta') {
-                  estadoController.text = 'Cerrada';
-                } else {
-                  estadoController.text = 'Abierta';
-                }
-                updateState(argumentsList[2], estadoController.text);
-                Navigator.pop(context, true); //Retorna a 'true' para indicar un cambio de estado
-              },
-              child: Text(estadoController.text == 'Abierta' ? 'Cerrar Incidencia' : 'Reabrir Incidencia'),
-            ),
-            
-            ElevatedButton(
-              onPressed: () async{
-                //Actualizar la incidencia en la base de datos
-                await updateIncident(argumentsList[2] ,clientController.text, fechaController.text, descController.text, tipoController.text, estadoController.text).then((value) => 
-                  Navigator.pop(context)
-                );
-              },
-              child: const Text('Actualizar'),
-            ),
-          ],
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final newEstado = estadoController.text == 'Abierta' ? 'Cerrada' : 'Abierta';
+                  final newFechaCierre = newEstado == 'Cerrada' ? dateFormat.format(DateTime.now()) : null;
+
+                  await updateState(argumentsList[2], newEstado, newFechaCierre);
+                  setState(() {
+                    estadoController.text = newEstado;
+                    fechaCierre = newEstado == 'Cerrada' ? DateTime.now() : null;
+                  });
+                  Navigator.pop(context, true);
+                },
+                child: Text(estadoController.text == 'Abierta' ? 'Cerrar Incidencia' : 'Reabrir Incidencia'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  await updateIncident(
+                    argumentsList[2],
+                    clientController.text,
+                    fechaController.text,
+                    descController.text,
+                    tipoController.text,
+                    estadoController.text,
+                    fechaCierre != null ? dateFormat.format(fechaCierre!) : null,
+                  ).then((value) => Navigator.pop(context));
+                },
+                child: const Text('Actualizar'),
+              ),
+            ],
+          ),
         ),
       ),
-    ));
+    );
   }
 }
