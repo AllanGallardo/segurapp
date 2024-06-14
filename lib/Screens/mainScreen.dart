@@ -149,7 +149,7 @@ class _MainPageState extends State<MainPage> {
       bottomNavigationBar: FutureBuilder(
         future: getCurrentLocation(), 
         builder: (context, snapshot){
-          return CustomNavigationBar(context: context, latitude: positionLatitude, longitude: positionLongitude);
+          return CustomNavigationBar(latitude: positionLatitude, longitude: positionLongitude);
         }));
   }
 }

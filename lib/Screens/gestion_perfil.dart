@@ -169,7 +169,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         
       ),
-      bottomNavigationBar: CustomNavigationBar(context: context),
+      bottomNavigationBar: const CustomNavigationBar(),
     );
     
   }
