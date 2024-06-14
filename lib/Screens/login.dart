@@ -54,9 +54,11 @@ class LoginPageState extends State<LoginPage> {
                     // ignore: use_build_context_synchronously
                     Navigator.pushNamed(context, '/mainScreen');
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Error al autenticar usuario')),
-                    );
+                    if(context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Error al autenticar usuario')),
+                      );
+                    }
                   }
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(

@@ -8,7 +8,7 @@ class RegistroPage extends StatefulWidget {
   const RegistroPage({Key? key});
 
   @override
-  _RegistroPageState createState() => _RegistroPageState();
+  State<RegistroPage> createState() => _RegistroPageState();
 }
 
 class _RegistroPageState extends State<RegistroPage> {
@@ -141,16 +141,20 @@ class _RegistroPageState extends State<RegistroPage> {
                     ElevatedButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          bool success = await _signUp();
+                          bool success = await _signUp(context);
                           if (success) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Usuario registrado con éxito')),
-                            );
+                            if(context.mounted){
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Usuario registrado con éxito')),
+                              );
+                            }
                           } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Error al registrar usuario')),
-                            );
+                            if(context.mounted){
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Error al registrar usuario')),
+                              );
+                            }
                           }
                         }
                       },
@@ -184,7 +188,7 @@ class _RegistroPageState extends State<RegistroPage> {
     );
   }
 
-  Future<bool> _signUp() async {
+Future<bool> _signUp() async {
     String nombre = _nombreController.text;
     String apellido = _apellidoController.text;
     String telefono = _telefonoController.text;
@@ -219,15 +223,19 @@ class _RegistroPageState extends State<RegistroPage> {
           errorMessage = 'Ocurrió un error desconocido.';
       }
       print('Error de registro: ${e.message}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error de registro: $errorMessage')),
-      );
+      if(context.mounted){
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error de registro: $errorMessage')),
+        );
+      }
       return false;
     } catch (e) {
       print('Error de registro: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error de registro: $e')),
-      );
+      if(context.mounted){
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error de registro: $e')),
+        );
+      }
       return false;
     }
   }
