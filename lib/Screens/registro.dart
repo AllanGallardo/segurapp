@@ -192,7 +192,7 @@ class _RegistroPageState extends State<RegistroPage> {
     String password = _contrasenaController.text;
 
     try {
-      User? user = await _auth.signUpWithEmailAndPassword(email, password);
+      User? user = await _auth.signUpWithEmailAndPassword(email, password, nombre, apellido, telefono);
       if (user != null) {
         print('Usuario registrado con éxito');
         return true;
