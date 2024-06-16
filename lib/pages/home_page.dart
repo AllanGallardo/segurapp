@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:segurapp/pages/update_page.dart';
 import 'package:segurapp/services/firebase.dart';
 import 'create_page.dart';
+import 'info_incidencia.dart';
 
 class Home extends StatefulWidget {
   const Home({
@@ -73,28 +73,13 @@ class _HomeState extends State<Home> {
     return filteredIncidents.sublist(startIndex, endIndex);
   }
 
-  Future<void> _showUpdatePage(BuildContext context, dynamic incident) async {
-    final result = await Navigator.push(
+  void _showIncidentDetails(BuildContext context, dynamic incident) {
+    Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const UpdatePage(),
-        settings: RouteSettings(
-          arguments: {
-            incident['cliente'],
-            incident['fecha'],
-            incident['id'],
-            incident['descripcion'],
-            incident['tipo'],
-            incident['estado'],
-            incident['imagen'],
-          },
-        ),
+        builder: (context) => InfoIncidencia(incident: incident),
       ),
     );
-
-    if (result == true) {
-      await loadIncidents();
-    }
   }
 
   Widget _buildPagination() {
@@ -256,24 +241,17 @@ class _HomeState extends State<Home> {
                 final incident = getPaginatedIncidents()[index];
                 return ListTile(
                   title: Text(
-                    'Cliente: ${incident['cliente']}',
+                    'Descripción: ${incident['descripcion']}',
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Descripción: ${incident['descripcion']}'),
                       Text('Fecha: ${incident['fecha']}'),
                       Text('Tipo: ${incident['tipo']}'),
-                      Text('Estado: ${incident['estado']}'),
-                      if (incident['estado'] == 'Cerrada' && incident['fechaCierre'] != null)
-                        Text('Fecha de cierre: ${incident['fechaCierre']}'),
                     ],
                   ),
-                  trailing: ElevatedButton(
-                    child: const Text('Modificar'),
-                    onPressed: () => _showUpdatePage(context, incident),
-                  ),
+                  onTap: () => _showIncidentDetails(context, incident),
                 );
               },
             ),

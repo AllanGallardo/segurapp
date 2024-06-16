@@ -14,6 +14,7 @@ import 'package:segurapp/Screens/gestion_perfil.dart';
 import 'package:segurapp/Screens/login.dart';
 import 'package:segurapp/Screens/mainScreen.dart';
 import 'package:segurapp/Screens/registro.dart';
+import 'pages/mis_inicidencias.dart';
 //import 'package:flutter_map/flutter_map.dart';
 
 void main() async{
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
         '/create': (context) => const CreatePage(),
         '/update': (context) => const UpdatePage(),
         '/experimental': (context) => const ExperimentalPage(),
+        '/mis_incidencias' :(context) => const Misincidencias(),
       },
     );
   }

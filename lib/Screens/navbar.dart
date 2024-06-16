@@ -27,7 +27,7 @@ class CustomNavigationBar extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.list),
             onPressed: () {
-              Navigator.pushNamed(this.context, '/ListPage');
+              Navigator.pushNamed(this.context, '/mis_incidencias');
             },
           ),
           IconButton(

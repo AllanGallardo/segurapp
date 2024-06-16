@@ -1,9 +1,9 @@
 // ignore_for_file: avoid_print
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:segurapp/services/firebase_auth_services.dart';
-
+FirebaseFirestore db = FirebaseFirestore.instance;
 class RegistroPage extends StatefulWidget {
   const RegistroPage({Key? key});
 
@@ -141,7 +141,7 @@ class _RegistroPageState extends State<RegistroPage> {
                     ElevatedButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          bool success = await _signUp(context);
+                          bool success = await _signUp();
                           if (success) {
                             if(context.mounted){
                               Navigator.pop(context);
@@ -198,6 +198,13 @@ Future<bool> _signUp() async {
     try {
       User? user = await _auth.signUpWithEmailAndPassword(email, password, nombre, apellido, telefono);
       if (user != null) {
+        // Almacenar el nombre del usuario en Firestore
+        await FirebaseFirestore.instance.collection('usuarios').doc(user.uid).set({
+          'nombre': nombre,
+          'apellido': apellido,
+          'telefono': telefono,
+          'email': email,
+        });
         print('Usuario registrado con éxito');
         return true;
       } else {
