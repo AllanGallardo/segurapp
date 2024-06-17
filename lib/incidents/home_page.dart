@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:segurapp/pages/update_page.dart';
+import 'package:segurapp/incidents/update_page.dart';
 import 'package:segurapp/services/firebase.dart';
 import 'create_page.dart';
 
 class Home extends StatefulWidget {
-  const Home({
-    Key? key,
-  }) : super(key: key);
+  const Home({super.key});
 
   @override
   State<Home> createState() => _HomeState();
@@ -156,7 +154,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Colors.red[400],
         onPressed: () async {
           final result = await Navigator.push(
             context,
@@ -166,6 +164,7 @@ class _HomeState extends State<Home> {
           if (result == true) {
             await loadIncidents();
           }
+          setState(() {});
         },
         child: const Icon(Icons.add, color: Colors.white),
         shape: RoundedRectangleBorder(

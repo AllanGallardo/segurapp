@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:latlong2/latlong.dart';
 
 FirebaseFirestore db = FirebaseFirestore.instance;
 
@@ -27,7 +28,7 @@ Future<List> getIncidents() async {
 }
 
 // CRUD CREATE
-Future<void> createIncident(String cliente, String fecha, String descripcion, String tipo, String estado, String linkImagen) async {
+Future<void> createIncident(String cliente, String fecha, String descripcion, String tipo, String estado, String linkImagen, LatLng posicion) async {
   await db.collection('incidencia').add({
     'cliente': cliente,
     'fecha': fecha,
@@ -36,6 +37,7 @@ Future<void> createIncident(String cliente, String fecha, String descripcion, St
     'estado': estado,
     'imagen': linkImagen,
     'fechaCierre': null,
+    'ubicacion': GeoPoint(posicion.latitude, posicion.longitude),
   });
 }
 

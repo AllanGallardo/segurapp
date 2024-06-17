@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 import 'package:segurapp/Screens/navbar.dart';
+import 'package:segurapp/incidents/providers/incident_provider.dart';
 //import 'package:flutter_map/flutter_map.dart' show Crs;
 
 // ignore: constant_identifier_names
@@ -52,6 +54,7 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    IncidentProvider incidentProvider = context.watch<IncidentProvider>();
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -64,6 +67,9 @@ class _MainPageState extends State<MainPage> {
             ? const CircularProgressIndicator()
             : FlutterMap(
                 options: MapOptions(
+                  onMapReady: () {
+                    incidentProvider.getLocation(myPosition!);
+                  },
                   initialCenter: myPosition!,
                   initialZoom: 16,
                   onTap: (tapPosition, latLng) {
@@ -123,7 +129,7 @@ class _MainPageState extends State<MainPage> {
                   myPosition = LatLng(position.latitude, position.longitude);
                 });
               },
-              backgroundColor: const Color.fromARGB(255, 255, 3, 3),
+              backgroundColor: Colors.red,
               child: const Icon(Icons.my_location),
             ),
           ),

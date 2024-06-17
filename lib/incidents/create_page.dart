@@ -3,6 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
+import 'package:segurapp/incidents/providers/incident_provider.dart';
 
 import '../services/firebase.dart';
 import '../services/imagen_up.dart';
@@ -16,7 +19,6 @@ class CreatePage extends StatefulWidget {
 }
 
 class _CreatePageState extends State<CreatePage> {
-
   TextEditingController clientController = TextEditingController(text: '' );
   TextEditingController fechaController = TextEditingController(text: '' );
   TextEditingController descController = TextEditingController(text: '' );
@@ -24,8 +26,10 @@ class _CreatePageState extends State<CreatePage> {
   File? imagenUpload;
   String linkImagen = '';
 
+
   @override
   Widget build(BuildContext context) {
+    IncidentProvider incidentProvider = context.watch<IncidentProvider>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Crear Incidencia'),
@@ -149,10 +153,10 @@ class _CreatePageState extends State<CreatePage> {
 
             ElevatedButton(
               onPressed: () async{
-                if (descController.text.length < 50) {
+                if (descController.text.length < 15) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('La descripción debe tener al menos 50 caracteres'),
+                      content: Text('La descripción debe tener al menos 15 caracteres'),
                     ),
                   );
                   return;
@@ -160,13 +164,21 @@ class _CreatePageState extends State<CreatePage> {
                 DateTime ahora = DateTime.now();
                 String horaFormateada = DateFormat('dd/MM/yyyy kk:mm:ss').format(ahora);
                 fechaController.text = horaFormateada;
+                LatLng ubicacion = incidentProvider.incidentLocation;
                 if (imagenUpload != null) {
                   linkImagen = await subirImagen( imagenUpload!);
                 }
                 // ignore: avoid_print
                 print (linkImagen);
-                createIncident(clientController.text, fechaController.text, descController.text, tipo, 'Abierta', linkImagen).then((_) => {
-                  Navigator.pop(context),
+                createIncident(
+                  clientController.text, 
+                  fechaController.text, 
+                  descController.text, 
+                  tipo, 
+                  'Abierta', 
+                  linkImagen, 
+                  ubicacion)
+                  .then((_) => {Navigator.pop(context),
                 });
               },
               child: const Text('Crear'),

@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 
 //Importaciones para Firebase
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'package:segurapp/incidents/providers/incident_provider.dart';
 
 
 //Paginas de la aplicación
 import 'firebase_options.dart';
-import 'pages/create_page.dart';
-import 'pages/experimental.dart';
-import 'pages/home_page.dart';
-import 'pages/update_page.dart';
+import 'incidents/create_page.dart';
+import 'incidents/experimental.dart';
+import 'incidents/home_page.dart';
+import 'incidents/update_page.dart';
 import 'package:segurapp/Screens/gestion_perfil.dart';
 import 'package:segurapp/Screens/login.dart';
 import 'package:segurapp/Screens/mainScreen.dart';
@@ -34,7 +36,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+
+    return MultiProvider(providers: [
+      ChangeNotifierProvider(create: (context) => IncidentProvider()),
+    ],
+    
+    child : MaterialApp(
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: {
@@ -48,6 +55,6 @@ class MyApp extends StatelessWidget {
         '/update': (context) => const UpdatePage(),
         '/experimental': (context) => const ExperimentalPage(),
       },
-    );
+    ),);
   }
 }
