@@ -1,11 +1,11 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, use_build_context_synchronously
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:segurapp/services/firebase_auth_services.dart';
 
 class RegistroPage extends StatefulWidget {
-  const RegistroPage({Key? key});
+  const RegistroPage({super.key});
 
   @override
   State<RegistroPage> createState() => _RegistroPageState();
