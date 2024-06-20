@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:segurapp/pages/update_page.dart';
 import 'package:segurapp/services/firebase.dart';
+import 'package:segurapp/pages/mis_inicidencias.dart';
 import 'create_page.dart';
 
 class Home extends StatefulWidget {
+  // ignore: use_super_parameters
   const Home({
     Key? key,
   }) : super(key: key);
@@ -167,15 +169,29 @@ class _HomeState extends State<Home> {
             await loadIncidents();
           }
         },
-        child: const Icon(Icons.add, color: Colors.white),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
         ),
         elevation: 10.0,
         splashColor: Colors.red,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       appBar: AppBar(
         title: const Text('Listado de Incidencias'),
+        actions: <Widget>[
+          Padding(
+            padding: const EdgeInsets.only(right: 10.0),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const MisIncidencias()),
+                );
+              },
+              child: const Icon(Icons.account_circle, size: 35.0),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [

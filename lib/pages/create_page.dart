@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../services/firebase.dart';
 import '../services/imagen_up.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 
 class CreatePage extends StatefulWidget {
@@ -17,7 +18,6 @@ class CreatePage extends StatefulWidget {
 
 class _CreatePageState extends State<CreatePage> {
 
-  TextEditingController clientController = TextEditingController(text: '' );
   TextEditingController fechaController = TextEditingController(text: '' );
   TextEditingController descController = TextEditingController(text: '' );
   String tipo = 'robo';
@@ -26,6 +26,10 @@ class _CreatePageState extends State<CreatePage> {
 
   @override
   Widget build(BuildContext context) {
+    final FirebaseAuth auth = FirebaseAuth.instance;
+    final User? user = auth.currentUser;
+    String currentUserId = user!.uid; // Obtén el ID del usuario actualmente autenticado
+    String currentMail = user.email ?? '';
     return Scaffold(
       appBar: AppBar(
         title: const Text('Crear Incidencia'),
@@ -34,11 +38,14 @@ class _CreatePageState extends State<CreatePage> {
         padding: const EdgeInsets.only(left: 16.0, right: 16.0),
         child: Column(
           children: [
-            TextField( 
-              controller: clientController,
-              decoration: const InputDecoration(
-                labelText: 'Ingrese nombre del usuario',
+            TextField(
+              controller: TextEditingController(text: currentMail),
+              enabled: false,
+              decoration: InputDecoration(
+                labelText: 'Correo del usuario',
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor), // Cambia el color del texto a morado
               ),
+              style: const TextStyle(color: Colors.black), // Cambia el color del texto a negro
             ),
              
             const Gap(10),
@@ -149,10 +156,10 @@ class _CreatePageState extends State<CreatePage> {
 
             ElevatedButton(
               onPressed: () async{
-                if (descController.text.length < 50) {
+                if (descController.text.length < 25) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('La descripción debe tener al menos 50 caracteres'),
+                      content: Text('La descripción debe tener al menos 25 caracteres'),
                     ),
                   );
                   return;
@@ -165,7 +172,7 @@ class _CreatePageState extends State<CreatePage> {
                 }
                 // ignore: avoid_print
                 print (linkImagen);
-                createIncident(clientController.text, fechaController.text, descController.text, tipo, 'Abierta', linkImagen).then((_) => {
+                createIncident(currentMail, fechaController.text, descController.text, tipo, 'Abierta', linkImagen, currentUserId).then((_) => {
                   Navigator.pop(context),
                 });
               },
