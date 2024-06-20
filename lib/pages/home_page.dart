@@ -1,140 +1,287 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:segurapp/pages/update_page.dart';
 import 'package:segurapp/services/firebase.dart';
-
 import 'create_page.dart';
-
 
 class Home extends StatefulWidget {
   const Home({
-    super.key,
-  });
+    Key? key,
+  }) : super(key: key);
 
   @override
   State<Home> createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
+  String? selectedType;
+  DateTime? selectedDate;
+  List<dynamic> allIncidents = [];
+  List<dynamic> filteredIncidents = [];
+  bool isAscending = true;
+  int currentPage = 0;
+  final int itemsPerPage = 10;
+  final ScrollController _scrollController = ScrollController();
+  final DateFormat dateFormat = DateFormat('dd/MM/yyyy');
+  final DateFormat dbDateFormat = DateFormat('dd/MM/yyyy HH:mm:ss');
+  bool isLoading = false;
+
   @override
-  Widget build(BuildContext context) {
-    final datos = ModalRoute.of(context)!.settings.arguments;
-    print('EL RICARDO SE COME AL JAIME Y LOS DATOS SON  $datos');
-    return Scaffold(
-      appBar: AppBar( // Agregado AppBar
-        leading: IconButton( // Agregado IconButton
-          icon: const Icon(Icons.arrow_back), // Icono de flecha hacia atrás
-          onPressed: () {
-            Navigator.pop(context); // Navega hacia atrás en el stack de navegación
+  void initState() {
+    super.initState();
+    loadIncidents();
+  }
+
+  Future<void> loadIncidents() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    var incidents = await getIncidents();
+    setState(() {
+      allIncidents = incidents;
+      filterAndPaginateIncidents();
+      isLoading = false;
+    });
+  }
+
+  void filterAndPaginateIncidents() {
+    List<dynamic> incidents = allIncidents.where((incident) {
+      DateTime incidentDate = dbDateFormat.parse(incident['fecha']);
+      bool matchesType = selectedType == null || selectedType == 'todos' || incident['tipo'] == selectedType;
+      bool matchesDate = selectedDate == null || dateFormat.format(incidentDate) == dateFormat.format(selectedDate!);
+      return matchesType && matchesDate;
+    }).toList();
+
+    incidents.sort((a, b) {
+      int compareResult = dbDateFormat.parse(a['fecha']).compareTo(dbDateFormat.parse(b['fecha']));
+      return isAscending ? compareResult : -compareResult;
+    });
+
+    setState(() {
+      filteredIncidents = incidents;
+      currentPage = 0;
+    });
+  }
+
+  List<dynamic> getPaginatedIncidents() {
+    int startIndex = currentPage * itemsPerPage;
+    int endIndex = startIndex + itemsPerPage;
+    if (endIndex > filteredIncidents.length) {
+      endIndex = filteredIncidents.length;
+    }
+    return filteredIncidents.sublist(startIndex, endIndex);
+  }
+
+  Future<void> _showUpdatePage(BuildContext context, dynamic incident) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const UpdatePage(),
+        settings: RouteSettings(
+          arguments: {
+            incident['cliente'],
+            incident['fecha'],
+            incident['id'],
+            incident['descripcion'],
+            incident['tipo'],
+            incident['estado'],
+            incident['imagen'],
+            incident['ubicacion'],
           },
         ),
       ),
-      //TODO: Hay que transformar la lista para que se vea por paginas.
-      body: FutureBuilder(
-        future: getIncidents(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return ListView.builder(
-            itemCount: snapshot.data?.length ?? 0,
-            itemBuilder: (context, index) {
-              return Dismissible(
-                onDismissed: (direction) async{
-                  deleteIncident(snapshot.data?[index]['id']);
-                  snapshot.data?.removeAt(index);
-                  setState(() {});
-                },
-                confirmDismiss: (direction) async {
-                  bool result = false;
-                  result = await showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text('Confirmar'),
-                        content: const Text('¿Está seguro que desea eliminar esta incidencia?'),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context, false);
-                            },
-                            child: const Text('No')),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context, true);
-                            },
-                            child: const Text('Sí, eliminar')),
-                        ],
-                      );
-                    }
-                  );
-                  return result;
-                },
-                key: Key(snapshot.data?[index]['id']??''),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  margin: const EdgeInsets.all(8.0),
-                  child: const Icon(Icons.delete),
-                ),
-                child: Container(
-                  margin: const EdgeInsets.all(8.0),
-                  child: ListTile(
-                    shape: RoundedRectangleBorder (
-                      borderRadius: BorderRadius.circular(10),
-                      side: const BorderSide(color: Colors.black),
-                    ),
-                    title: Text(snapshot.data?[index]['cliente']),
-                    subtitle: Text(snapshot.data?[index]['fecha']??''),
-                    onTap: () async {
-                      await Navigator.pushNamed(context, '/update', arguments:{
-                        datos,
-                        snapshot.data?[index]['cliente']??'',
-                        snapshot.data?[index]['fecha']??'',
-                        snapshot.data?[index]['id'],
-                        snapshot.data?[index]['descripcion'],
-                        snapshot.data?[index]['tipo'],
-                        snapshot.data?[index]['estado'],
-                        snapshot.data?[index]['imagen']??''
-                      });
-                      //Actualizar la lista de incidencias
-                      setState(() {});
-                    },
-                  ),
-                ),
-              );
-            }
-            );
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-        }),
-        floatingActionButton: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            FloatingActionButton(
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CreatePage(),
-                  ),
-                );
-                // Update the list of incidents (if needed)
-                setState(() {});
-              },
-              child: const Icon(Icons.add),
+    );
+
+    if (result == true) {
+      await loadIncidents();
+    }
+  }
+
+  Widget _buildPagination() {
+    int totalPages = (filteredIncidents.length / itemsPerPage).ceil();
+    List<Widget> pageButtons = [];
+
+    for (int i = 0; i < totalPages; i++) {
+      pageButtons.add(
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: const CircleBorder(),
+              padding: const EdgeInsets.all(12.0),
+              minimumSize: const Size(40, 40),
             ),
-            // const SizedBox(width: 10),
-            //  FloatingActionButton( // New button for experimental page
-            //    onPressed: () {
-            //      Navigator.pushNamed(context, '/experimental');
-            //    },
-            //    child: const Icon(Icons.explore), // You can customize the icon
-            //  ),
-          ],
+            onPressed: currentPage != i
+                ? () {
+                    setState(() {
+                      currentPage = i;
+                    });
+                  }
+                : null,
+            child: Text('${i + 1}'),
+          ),
         ),
       );
     }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: currentPage > 0
+              ? () {
+                  setState(() {
+                    currentPage--;
+                  });
+                }
+              : null,
+        ),
+        ...pageButtons,
+        IconButton(
+          icon: const Icon(Icons.arrow_forward),
+          onPressed: currentPage < totalPages - 1
+              ? () {
+                  setState(() {
+                    currentPage++;
+                  });
+                }
+              : null,
+        ),
+      ],
+    );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.redAccent,
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreatePage()),
+          );
+
+          if (result == true) {
+            await loadIncidents();
+          }
+        },
+        child: const Icon(Icons.add, color: Colors.white),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        elevation: 10.0,
+        splashColor: Colors.red,
+      ),
+      appBar: AppBar(
+        title: const Text('Listado de Incidencias'),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                DropdownButton<String>(
+                  hint: const Text('Filtrar por tipo'),
+                  value: selectedType,
+                  items: ['todos', 'robo', 'extravio', 'violencia', 'accidente', 'sospecha', 'disturbio', 'incendio', 'cortes', 'portonazos', 'otro']
+                      .map((String type) {
+                    return DropdownMenuItem<String>(
+                      value: type,
+                      child: Text(type),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedType = newValue;
+                      filterAndPaginateIncidents();
+                    });
+                  },
+                ),
+                const SizedBox(width: 8.0),
+                ElevatedButton(
+                  onPressed: () async {
+                    final DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: selectedDate ?? DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    if (pickedDate != null) {
+                      setState(() {
+                        selectedDate = pickedDate;
+                        filterAndPaginateIncidents();
+                      });
+                    }
+                  },
+                  onLongPress: () {
+                    setState(() {
+                      selectedDate = null;
+                      filterAndPaginateIncidents();
+                    });
+                  },
+                  child: Text(selectedDate == null
+                      ? 'Filtrar por fecha'
+                      : dateFormat.format(selectedDate!)),
+                ),
+                const SizedBox(width: 8.0),
+                IconButton(
+                  icon: Icon(isAscending ? Icons.arrow_upward : Icons.arrow_downward),
+                  onPressed: () {
+                    setState(() {
+                      isAscending = !isAscending;
+                      filterAndPaginateIncidents();
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              itemCount: getPaginatedIncidents().length + (isLoading ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == getPaginatedIncidents().length) {
+                  return isLoading
+                      ? const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      : const SizedBox.shrink();
+                }
+
+                final incident = getPaginatedIncidents()[index];
+                return ListTile(
+                  title: Text(
+                    'Cliente: ${incident['cliente']}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Descripción: ${incident['descripcion']}'),
+                      Text('Fecha: ${incident['fecha']}'),
+                      Text('Tipo: ${incident['tipo']}'),
+                      Text('Estado: ${incident['estado']}'),
+                      if (incident['estado'] == 'Cerrada' && incident['fechaCierre'] != null)
+                        Text('Fecha de cierre: ${incident['fechaCierre']}'),
+                    ],
+                  ),
+                  trailing: ElevatedButton(
+                    child: const Text('Modificar'),
+                    onPressed: () => _showUpdatePage(context, incident),
+                  ),
+                );
+              },
+            ),
+          ),
+          _buildPagination(),
+        ],
+      ),
+    );
+  }
+}

@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 
 
 class CustomNavigationBar extends StatelessWidget {
-  final String? latitude;
-  final String? longitude;
-  const CustomNavigationBar({super.key, this.latitude, this.longitude});
+  final BuildContext context;
+
+  const CustomNavigationBar({super.key, required this.context});
 
   @override
   Widget build(BuildContext context) {
-    print('Me llegaron estos datos: $latitude, $longitude');
     return BottomAppBar(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -16,20 +15,19 @@ class CustomNavigationBar extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.home),
             onPressed: () {
-              Navigator.pushNamed(context, '/mainScreen');
+              Navigator.pushNamed(this.context, '/mainScreen');
             },
           ),
           IconButton(
             icon: const Icon(Icons.description),
             onPressed: () {
-              Navigator.pushNamed(context, '/DescriptionPage', arguments:{latitude , longitude});
+              Navigator.pushNamed(this.context, '/DescriptionPage');
             },
           ),
           IconButton(
             icon: const Icon(Icons.list),
             onPressed: () {
-              Navigator.pushNamed(
-                context, '/ListPage',);
+              Navigator.pushNamed(this.context, '/ListPage');
             },
           ),
           IconButton(

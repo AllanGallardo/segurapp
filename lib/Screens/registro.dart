@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, use_build_context_synchronously
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -14,14 +14,18 @@ class RegistroPage extends StatefulWidget {
 class _RegistroPageState extends State<RegistroPage> {
   final FirebaseAuthServices _auth = FirebaseAuthServices();
   final _formKey = GlobalKey<FormState>();
-  final _usuarioController = TextEditingController();
+  final _nombreController = TextEditingController();
+  final _apellidoController = TextEditingController();
+  final _telefonoController = TextEditingController();
   final _emailController = TextEditingController();
   final _contrasenaController = TextEditingController();
   final _confirmarContrasenaController = TextEditingController();
 
   @override
   void dispose() {
-    _usuarioController.dispose();
+    _nombreController.dispose();
+    _apellidoController.dispose();
+    _telefonoController.dispose();
     _emailController.dispose();
     _contrasenaController.dispose();
     _confirmarContrasenaController.dispose();
@@ -36,7 +40,7 @@ class _RegistroPageState extends State<RegistroPage> {
           'Registro',
           textAlign: TextAlign.center,
         ),
-        centerTitle: true, // Centrar el título en la AppBar
+        centerTitle: true,
         backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(
@@ -49,13 +53,38 @@ class _RegistroPageState extends State<RegistroPage> {
                 child: Column(
                   children: [
                     TextFormField(
-                      controller: _usuarioController,
+                      controller: _nombreController,
                       decoration: const InputDecoration(
-                        labelText: 'Nombre de usuario',
+                        labelText: 'Nombre',
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu nombre de usuario';
+                          return 'Por favor ingresa tu nombre';
+                        }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      controller: _apellidoController,
+                      decoration: const InputDecoration(
+                        labelText: 'Apellido',
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingresa tu apellido';
+                        }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      controller: _telefonoController,
+                      decoration: const InputDecoration(
+                        labelText: 'Teléfono',
+                      ),
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingresa tu teléfono';
                         }
                         return null;
                       },
@@ -86,6 +115,9 @@ class _RegistroPageState extends State<RegistroPage> {
                         if (value == null || value.isEmpty) {
                           return 'Por favor ingresa tu contraseña';
                         }
+                        if (value.length < 6) {
+                          return 'La contraseña debe tener al menos 6 caracteres';
+                        }
                         return null;
                       },
                     ),
@@ -109,7 +141,7 @@ class _RegistroPageState extends State<RegistroPage> {
                     ElevatedButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          bool success = await _signUp(context);
+                          bool success = await _signUp();
                           if (success) {
                             if(context.mounted){
                               Navigator.pop(context);
@@ -156,14 +188,15 @@ class _RegistroPageState extends State<RegistroPage> {
     );
   }
 
-  Future<bool> _signUp(BuildContext context) async {
-    //username no esta siendo usado
-    //String username = _usuarioController.text;
+Future<bool> _signUp() async {
+    String nombre = _nombreController.text;
+    String apellido = _apellidoController.text;
+    String telefono = _telefonoController.text;
     String email = _emailController.text;
     String password = _contrasenaController.text;
 
     try {
-      User? user = await _auth.signUpWithEmailAndPassword(email, password);
+      User? user = await _auth.signUpWithEmailAndPassword(email, password, nombre, apellido, telefono);
       if (user != null) {
         print('Usuario registrado con éxito');
         return true;

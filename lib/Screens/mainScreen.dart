@@ -5,7 +5,6 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:segurapp/Screens/navbar.dart';
-//import 'package:flutter_map/flutter_map.dart' show Crs;
 
 // ignore: constant_identifier_names
 const MAPBOX_ACCESS_TOKEN =
@@ -21,7 +20,8 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   LatLng? myPosition;
-  
+  late MapController mapController;
+
   Future<Position> determinePosition() async {
     LocationPermission permission;
     permission = await Geolocator.checkPermission();
@@ -46,14 +46,13 @@ class _MainPageState extends State<MainPage> {
 
   @override
   void initState() {
-    getCurrentLocation();
     super.initState();
+    mapController = MapController();
+    getCurrentLocation();
   }
 
   @override
-  Widget build(BuildContext context){
-    String? positionLatitude;
-    String? positionLongitude;
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -63,66 +62,52 @@ class _MainPageState extends State<MainPage> {
       body: Stack(
         children: <Widget>[
           myPosition == null
-            ? const SafeArea(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(),]
-                  )
-                )
-              )
-              :FlutterMap(
-                options: MapOptions(
-                  onMapReady: (){
-                    positionLatitude = myPosition!.latitude.toString();
-                    positionLongitude = myPosition!.longitude.toString();
-                    print ('Latitud: $positionLatitude, Longitud: $positionLongitude');
-                    setState(() {});
-                  },
-                  initialCenter: myPosition!,
-                  initialZoom: 16,
-                  onTap: (tapPosition, latLng) {
-                    // Aquí puedes usar tapPosition y latLng
-                    // Por ejemplo, puedes querer actualizar myPosition con latLng
-                    setState(() {
-                      myPosition = latLng;
-                    });
-                  },
-                  minZoom: 5, 
-                  maxZoom: 25, 
-                  crs: const Epsg3857(), 
-                ),
-                children: [
-                  TileLayer(
-                    urlTemplate:
-                        'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}',
-                    additionalOptions: const {
-                      'accessToken': MAPBOX_ACCESS_TOKEN,
-                      'id': 'mapbox/streets-v12'
-                    },
-                  ),
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        width: 80.0,
-                        height: 80.0,
-                        point: myPosition!,
-                        child: const Icon(
-                          Icons.person_pin_circle_rounded,
-                          color: Color.fromARGB(255, 104, 144, 212),
-                          size: 40,
-                        ),
-                      )
-                    ],
+              ? const CircularProgressIndicator()
+              : FlutterMap(
+            mapController: mapController,
+            options: MapOptions(
+              initialCenter: myPosition!,
+              initialZoom: 16,
+              onTap: (tapPosition, latLng) {
+                // Aquí puedes usar tapPosition y latLng
+                // Por ejemplo, puedes querer actualizar myPosition con latLng
+                setState(() {
+                  myPosition = latLng;
+                });
+              },
+              minZoom: 5,
+              maxZoom: 25,
+              crs: const Epsg3857(),
+            ),
+            children: [
+              TileLayer(
+                urlTemplate:
+                'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}',
+                additionalOptions: const {
+                  'accessToken': MAPBOX_ACCESS_TOKEN,
+                  'id': 'mapbox/streets-v12'
+                },
+              ),
+              MarkerLayer(
+                markers: [
+                  Marker(
+                    width: 80.0,
+                    height: 80.0,
+                    point: myPosition!,
+                    child: const Icon(
+                      Icons.person_pin,
+                      color: Color.fromARGB(255, 104, 144, 212),
+                      size: 40,
+                    ),
                   )
                 ],
-              ),
+              )
+            ],
+          ),
           Positioned(
             top: 10.0,
             right: 10.0,
             child: FloatingActionButton(
-              heroTag: 'panic',
               onPressed: () {
                 // Aquí va tu código para el botón de pánico
               },
@@ -135,10 +120,8 @@ class _MainPageState extends State<MainPage> {
             right: 10.0,
             child: FloatingActionButton(
               onPressed: () async {
-                Position position = await determinePosition();
-                setState(() {
-                  myPosition = LatLng(position.latitude, position.longitude);
-                });
+                LatLng currentLocation = await getCurrentLocation();
+                mapController.move(currentLocation, 16);
               },
               backgroundColor: const Color.fromARGB(255, 255, 3, 3),
               child: const Icon(Icons.my_location),
@@ -146,10 +129,9 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
       ),
-      bottomNavigationBar: FutureBuilder(
-        future: getCurrentLocation(), 
-        builder: (context, snapshot){
-          return CustomNavigationBar(latitude: positionLatitude, longitude: positionLongitude);
-        }));
+      bottomNavigationBar: CustomNavigationBar(
+        context: context,
+      ),
+    );
   }
 }
