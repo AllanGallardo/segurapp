@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:segurapp/pages/update_page.dart';
 import 'package:segurapp/services/firebase.dart';
-import 'create_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class Misincidencias extends StatefulWidget {
-  const Misincidencias({
-    Key? key,
-  }) : super(key: key);
+class MisIncidencias extends StatefulWidget {
+  const MisIncidencias({
+    super.key,
+  });
 
   @override
-  State<Misincidencias> createState() => _HomeState();
+  State<MisIncidencias> createState() => _MisIncidenciasState();
 }
 
-class _HomeState extends State<Misincidencias> {
+class _MisIncidenciasState extends State<MisIncidencias> {
   String? selectedType;
   DateTime? selectedDate;
   List<dynamic> allIncidents = [];
@@ -46,12 +46,18 @@ class _HomeState extends State<Misincidencias> {
   }
 
   void filterAndPaginateIncidents() {
+    final FirebaseAuth auth = FirebaseAuth.instance;
+    final User? user = auth.currentUser;
+    String currentUserId = user!.uid; // Obtén el ID del usuario actualmente autenticado
+    //print(currentUserId);
+
     List<dynamic> incidents = allIncidents.where((incident) {
-      DateTime incidentDate = dbDateFormat.parse(incident['fecha']);
-      bool matchesType = selectedType == null || selectedType == 'todos' || incident['tipo'] == selectedType;
-      bool matchesDate = selectedDate == null || dateFormat.format(incidentDate) == dateFormat.format(selectedDate!);
-      return matchesType && matchesDate;
-    }).toList();
+    DateTime incidentDate = dbDateFormat.parse(incident['fecha']);
+    bool matchesType = selectedType == null || selectedType == 'todos' || incident['tipo'] == selectedType;
+    bool matchesDate = selectedDate == null || dateFormat.format(incidentDate) == dateFormat.format(selectedDate!);
+    bool matchesUser = incident['userId'] == currentUserId; // Comprueba si el ID del usuario de la incidencia coincide con el ID del usuario autenticado
+    return matchesType && matchesDate && matchesUser;
+  }).toList();
 
     incidents.sort((a, b) {
       int compareResult = dbDateFormat.parse(a['fecha']).compareTo(dbDateFormat.parse(b['fecha']));
@@ -155,25 +161,6 @@ class _HomeState extends State<Misincidencias> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.redAccent,
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CreatePage()),
-          );
-
-          if (result == true) {
-            await loadIncidents();
-          }
-        },
-        child: const Icon(Icons.add, color: Colors.white),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        elevation: 10.0,
-        splashColor: Colors.red,
-      ),
       appBar: AppBar(
         title: const Text('Listado de Incidencias'),
       ),

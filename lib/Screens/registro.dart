@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:segurapp/services/firebase_auth_services.dart';
 FirebaseFirestore db = FirebaseFirestore.instance;
 class RegistroPage extends StatefulWidget {
+  // ignore: use_key_in_widget_constructors
   const RegistroPage({Key? key});
 
   @override

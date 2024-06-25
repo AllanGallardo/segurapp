@@ -1,11 +1,13 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../services/firebase.dart';
 import '../services/imagen_up.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class CreatePage extends StatefulWidget {
   const CreatePage({super.key});
@@ -15,48 +17,19 @@ class CreatePage extends StatefulWidget {
 }
 
 class _CreatePageState extends State<CreatePage> {
-  final TextEditingController fechaController = TextEditingController();
-  final TextEditingController descController = TextEditingController();
+
+  TextEditingController fechaController = TextEditingController(text: '' );
+  TextEditingController descController = TextEditingController(text: '' );
   String tipo = 'robo';
   File? imagenUpload;
   String linkImagen = '';
-  String? userName = 'Cargando...';
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUserName();
-  }
-
-  Future<void> _fetchUserName() async {
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('usuarios').doc(user.uid).get();
-        if (userDoc.exists) {
-          setState(() {
-            userName = userDoc['nombre'];
-          });
-        } else {
-          setState(() {
-            userName = 'Usuario Desconocido';
-          });
-        }
-      } else {
-        setState(() {
-          userName = 'No autenticado';
-        });
-      }
-    } catch (e) {
-      print('Error al obtener el nombre de usuario: $e');
-      setState(() {
-        userName = 'Error';
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    final FirebaseAuth auth = FirebaseAuth.instance;
+    final User? user = auth.currentUser;
+    String currentUserId = user!.uid; // Obtén el ID del usuario actualmente autenticado
+    String currentMail = user.email ?? '';
     return Scaffold(
       appBar: AppBar(
         title: const Text('Crear Incidencia'),
@@ -66,19 +39,33 @@ class _CreatePageState extends State<CreatePage> {
         child: Column(
           children: [
             TextField(
+              controller: TextEditingController(text: currentMail),
               enabled: false,
               decoration: InputDecoration(
-                labelText: 'Usuario: $userName',
+                labelText: 'Correo del usuario',
+                labelStyle: TextStyle(color: Theme.of(context).primaryColor), // Cambia el color del texto a morado
               ),
+              style: const TextStyle(color: Colors.black), // Cambia el color del texto a negro
             ),
+             
             const Gap(10),
-            TextField(
+
+            TextField( 
               controller: descController,
               decoration: const InputDecoration(
                 labelText: 'Describa la situación',
               ),
             ),
+
+            /*TextField( 
+              controller: fechaController,
+              decoration: const InputDecoration(
+                labelText: 'Ingrese la fecha de la incidencia',
+              ),
+            ),*/
+
             const Gap(15),
+
             Container(
               margin: const EdgeInsets.all(10),
               height: 200,
@@ -88,70 +75,74 @@ class _CreatePageState extends State<CreatePage> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: imagenUpload != null
-                  ? Image.file(imagenUpload!)
+                  ? Image.file(imagenUpload!) // Mostrar imagen si está seleccionada
                   : const Center(
-                      child: Text(
+                      child: Text(// Mostrar texto si no hay imagen
                         "Imagen no seleccionada",
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey,
                         ),
                       ),
-                    ),
+                    ), 
             ),
+
             ElevatedButton(
-              onPressed: () async {
-                final imagen = await getImagen();
-                setState(() {
-                  imagenUpload = File(imagen!.path);
-                });
-              },
-              child: const Text('Seleccionar imagen'),
-            ),
+            onPressed: () async {
+              //Con getImagenCamara() se puede subir una foto
+              final imagen = await getImagen(); //
+              setState(() {
+                imagenUpload = File(imagen!.path);
+              });
+            }, 
+            child: 
+              const Text('Seleccionar imagen')),
+            
             const Gap(20),
+        
             const Text('Seleccione el tipo de incidencia'),
             DropdownButton<String>(
               value: tipo,
               items: const [
                 DropdownMenuItem(
-                  value: 'robo',
-                  child: Text('Robo / Asalto'),
+                value: 'robo',
+                child: Text('Robo / Asalto'),
                 ),
-                DropdownMenuItem(
-                  value: 'extravio',
-                  child: Text('Extravío'),
+                 DropdownMenuItem(
+                value: 'extravio',
+                child: Text('Extravío'),
                 ),
-                DropdownMenuItem(
-                  value: 'violencia',
-                  child: Text('Violencia doméstica'),
+                 DropdownMenuItem(
+                value: 'violencia',
+                child: Text('Violencia doméstica'),
                 ),
                 DropdownMenuItem(
                   value: 'accidente',
                   child: Text('Accidente de tránsito'),
                 ),
-                DropdownMenuItem(
-                  value: 'sospecha',
-                  child: Text('Actividad sospechosa'),
+                 DropdownMenuItem(
+                value: 'sospecha',
+                child: Text('Actividad sospechosa'),
                 ),
                 DropdownMenuItem(
                   value: 'disturbio',
                   child: Text('Disturbios'),
                 ),
-                DropdownMenuItem(
-                  value: 'incendio',
-                  child: Text('Incendio'),
+                 DropdownMenuItem(
+                value: 'incendio',
+                child: Text('Incendio'),
                 ),
-                DropdownMenuItem(
-                  value: 'cortes',
-                  child: Text('Corte de tránsito'),
+                 DropdownMenuItem(
+                value: 'cortes',
+                child: Text('Corte de tránsito'),
                 ),
-                DropdownMenuItem(
-                  value: 'portonazo',
-                  child: Text('Portonazo'),
+                 DropdownMenuItem(
+                value: 'portonazo',
+                child: Text('Portonazo'),
                 ),
-                DropdownMenuItem(
-                  value: 'otro',
-                  child: Text('Otro..'),
+                 DropdownMenuItem(
+                value: 'otro',
+                child: Text('Otro..'),
                 ),
               ],
               onChanged: (String? newValue) {
@@ -160,13 +151,15 @@ class _CreatePageState extends State<CreatePage> {
                 });
               },
             ),
+
             const Gap(10),
+
             ElevatedButton(
-              onPressed: () async {
-                if (descController.text.length < 50) {
+              onPressed: () async{
+                if (descController.text.length < 25) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('La descripción debe tener al menos 50 caracteres'),
+                      content: Text('La descripción debe tener al menos 25 caracteres'),
                     ),
                   );
                   return;
@@ -175,14 +168,17 @@ class _CreatePageState extends State<CreatePage> {
                 String horaFormateada = DateFormat('dd/MM/yyyy kk:mm:ss').format(ahora);
                 fechaController.text = horaFormateada;
                 if (imagenUpload != null) {
-                  linkImagen = await subirImagen(imagenUpload!);
+                  linkImagen = await subirImagen( imagenUpload!);
                 }
-                createIncident(userName ?? 'Usuario Desconocido', fechaController.text, descController.text, tipo, 'Abierta', linkImagen).then((_) => {
+                // ignore: avoid_print
+                print (linkImagen);
+                createIncident(currentMail, fechaController.text, descController.text, tipo, 'Abierta', linkImagen, currentUserId).then((_) => {
                   Navigator.pop(context),
                 });
               },
               child: const Text('Crear'),
             ),
+            
           ],
         ),
       ),
