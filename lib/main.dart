@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 //Importaciones para Firebase
 import 'package:firebase_core/firebase_core.dart';
+import 'package:segurapp/Screens/incident_details.dart';
 
 
 //Paginas de la aplicación
@@ -47,6 +48,7 @@ class MyApp extends StatelessWidget {
         '/create': (context) => const CreatePage(),
         '/update': (context) => const UpdatePage(),
         '/experimental': (context) => const ExperimentalPage(),
+        '/incidentDetails': (context) => IncidentDetailsPage(),
       },
     );
   }

@@ -3,17 +3,15 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:segurapp/Screens/navbar.dart';
-import 'package:segurapp/services/firebase.dart'; // Importar el servicio que obtendrá las incidencias
+import 'package:segurapp/services/firebase.dart';
 
-
-const MAPBOX_ACCESS_TOKEN =
-    'sk.eyJ1IjoiYWJ1cmlrIiwiYSI6ImNsd3k5ZWdlZzFqbDUybXB6NXFiaDRpMnEifQ.BzLqhvgP3XxaD3Vk1mAxzA';
+// ignore: constant_identifier_names
+const MAPBOX_ACCESS_TOKEN = 'sk.eyJ1IjoiYWJ1cmlrIiwiYSI6ImNsd3k5ZWdlZzFqbDUybXB6NXFiaDRpMnEifQ.BzLqhvgP3XxaD3Vk1mAxzA';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
   @override
-
   _MainPageState createState() => _MainPageState();
 }
 
@@ -21,6 +19,19 @@ class _MainPageState extends State<MainPage> {
   LatLng? myPosition;
   late MapController mapController;
   List<dynamic> incidents = [];
+  List<LatLng> dangerZones = [];
+  Map<String, bool> filterOptions = {
+    'robo': true,
+    'accidente': true,
+    'violencia': true,
+    'incendio': true,
+    'extravio': true,
+    'sospecha': true,
+    'disturbio': true,
+    'corte': true,
+    'portazo': true,
+    'otro': true,
+  };
 
   Future<Position> determinePosition() async {
     LocationPermission permission;
@@ -49,14 +60,57 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     mapController = MapController();
     getCurrentLocation();
-    loadIncidents(); // Cargar las incidencias al iniciar
+    loadIncidents();
   }
 
   Future<void> loadIncidents() async {
-    var loadedIncidents = await getIncidents(); // Llamar al servicio para obtener las incidencias
+    var loadedIncidents = await getIncidents();
     setState(() {
-      incidents = loadedIncidents;
+      incidents = loadedIncidents.map((incident) {
+        if (incident['ubicacion'] is String) {
+          var location = incident['ubicacion'].split(',');
+          incident['ubicacion'] = LatLng(double.parse(location[0]), double.parse(location[1]));
+        }
+        return incident;
+      }).toList();
     });
+    detectDangerZones();
+  }
+
+  void detectDangerZones() {
+    Map<String, List<LatLng>> incidentGroups = {};
+    for (var incident in incidents) {
+      String type = incident['tipo'];
+      LatLng location = incident['ubicacion'];
+      if (!incidentGroups.containsKey(type)) {
+        incidentGroups[type] = [];
+      }
+      incidentGroups[type]!.add(location);
+    }
+
+    List<LatLng> dangerZonesDetected = [];
+    incidentGroups.forEach((type, locations) {
+      for (int i = 0; i < locations.length; i++) {
+        int count = 1;
+        for (int j = 0; j < locations.length; j++) {
+          if (i != j && Geolocator.distanceBetween(
+              locations[i].latitude, locations[i].longitude,
+              locations[j].latitude, locations[j].longitude
+          ) <= 1000) {
+            count++;
+          }
+        }
+        if (count >= 3) {
+          dangerZonesDetected.add(locations[i]);
+        }
+      }
+    });
+
+    setState(() {
+      dangerZones = dangerZonesDetected.toSet().toList();
+    });
+
+    print('Zonas peligrosas detectadas: $dangerZones');
   }
 
   Widget getIconForIncident(String type) {
@@ -98,7 +152,6 @@ class _MainPageState extends State<MainPage> {
               Text('Tipo: ${incident['tipo']}'),
               Text('Descripción: ${incident['descripcion']}'),
               Text('Fecha: ${incident['fecha']}'),
-              // Añadir más detalles según sea necesario
             ],
           ),
           actions: <Widget>[
@@ -114,6 +167,29 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  void showFilterOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SingleChildScrollView(
+          child: Column(
+            children: filterOptions.keys.map((String key) {
+              return CheckboxListTile(
+                title: Text(key),
+                value: filterOptions[key],
+                onChanged: (bool? value) {
+                  setState(() {
+                    filterOptions[key] = value!;
+                  });
+                },
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,6 +197,14 @@ class _MainPageState extends State<MainPage> {
         centerTitle: true,
         title: const Text('SegurApp'),
         backgroundColor: Colors.blueAccent,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.filter_list),
+            onPressed: () {
+              showFilterOptions(context);
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: <Widget>[
@@ -129,11 +213,9 @@ class _MainPageState extends State<MainPage> {
               : FlutterMap(
             mapController: mapController,
             options: MapOptions(
-              initialCenter: myPosition!,
-              initialZoom: 16,
+              center: myPosition,
+              zoom: 16,
               onTap: (tapPosition, latLng) {
-                // Aquí puedes usar tapPosition y latLng
-                // Por ejemplo, puedes querer actualizar myPosition con latLng
                 setState(() {
                   myPosition = latLng;
                 });
@@ -163,7 +245,9 @@ class _MainPageState extends State<MainPage> {
                       size: 40,
                     ),
                   ),
-                  ...incidents.map((incident) {
+                  ...incidents.where((incident) {
+                    return filterOptions[incident['tipo']] ?? false;
+                  }).map((incident) {
                     if (incident['ubicacion'] != null) {
                       return Marker(
                         width: 80.0,
@@ -179,10 +263,21 @@ class _MainPageState extends State<MainPage> {
                       width: 0.0,
                       height: 0.0,
                       point: LatLng(0, 0),
-                      child: Container(), // Placeholder para ubicaciones nulas
+                      child: Container(),
                     );
                   }).toList(),
                 ],
+              ),
+              CircleLayer(
+                circles: dangerZones.map((zone) {
+                  return CircleMarker(
+                    point: zone,
+                    color: Colors.red.withOpacity(0.5),
+                    borderStrokeWidth: 2,
+                    borderColor: Colors.red,
+                    radius: 1000, // 1 km radius
+                  );
+                }).toList(),
               ),
             ],
           ),

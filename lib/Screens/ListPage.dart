@@ -84,23 +84,10 @@ class _FeedState extends State<Feed> {
   }
 
   Future<void> _showListPage(BuildContext context, dynamic incident) async {
-    final result = await Navigator.push(
+    final result = await Navigator.pushNamed(
       context,
-      MaterialPageRoute(
-        builder: (context) => const DeployFeed(),
-        settings: RouteSettings(
-          arguments: {
-            incident['cliente'],
-            incident['fecha'],
-            incident['id'],
-            incident['descripcion'],
-            incident['tipo'],
-            incident['estado'],
-            incident['imagen'],
-            incident['ubicacion'],  // Pasar la ubicación
-          },
-        ),
-      ),
+      '/incidentDetails',
+      arguments: incident,
     );
 
     if (result == true) {
@@ -199,7 +186,7 @@ class _FeedState extends State<Feed> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor:  const Color.fromARGB(255, 32, 133, 192),
+        backgroundColor: const Color.fromARGB(255, 32, 133, 192),
         title: const Text('Feed de incidencias'),
       ),
       body: Column(
@@ -222,7 +209,6 @@ class _FeedState extends State<Feed> {
                     {'id': 'cortes', 'displayValue': 'Corte de tránsito'},
                     {'id': 'portonazo', 'displayValue': 'Portonazo'},
                     {'id': 'otro', 'displayValue': 'Otro...'},
-                    // Agrega más elementos aquí
                   ].map((Map<String, String> item) {
                     return DropdownMenuItem<String>(
                       value: item['id'],
@@ -259,15 +245,15 @@ class _FeedState extends State<Feed> {
                 const SizedBox(width: 8.0),
                 Expanded(
                     child: IconButton(
-                      icon: Icon(isAscending ? Icons.arrow_upward : Icons.arrow_downward),
+                      icon:
+                      Icon(isAscending ? Icons.arrow_upward : Icons.arrow_downward),
                       onPressed: () {
                         setState(() {
                           isAscending = !isAscending;
                           sortIncidents();
                         });
                       },
-                    )
-                ),
+                    )),
               ],
             ),
           ),
@@ -298,26 +284,30 @@ class _FeedState extends State<Feed> {
                       children: [
                         Text('Descripción: ${incident['descripcion']}'),
                         Text('Fecha: ${incident['fecha']}'),
-                        Text('Ubicación: ${incident['ubicacion']}'), // Mostrar ubicación
-                        if (incident['tipo']=='robo')
+                        Text(
+                            'Ubicación: ${incident['ubicacion']}'), // Mostrar ubicación
+                        if (incident['tipo'] == 'robo')
                           const Text('Categoría de la incidencia: Robo/Asalto'),
-                        if (incident['tipo']=='extravio')
+                        if (incident['tipo'] == 'extravio')
                           const Text('Categoría de la incidencia: Extravío'),
-                        if (incident['tipo']=='violencia')
-                          const Text('Categoría de la incidencia: Violencia doméstica'),
-                        if (incident['tipo']=='accidente')
-                          const Text('Categoría de la incidencia: Accidente de tránsito'),
-                        if (incident['tipo']=='sospecha')
-                          const Text('Categoría de la incidencia: Actividad sospechosa'),
-                        if (incident['tipo']=='disturbio')
+                        if (incident['tipo'] == 'violencia')
+                          const Text(
+                              'Categoría de la incidencia: Violencia doméstica'),
+                        if (incident['tipo'] == 'accidente')
+                          const Text(
+                              'Categoría de la incidencia: Accidente de tránsito'),
+                        if (incident['tipo'] == 'sospecha')
+                          const Text(
+                              'Categoría de la incidencia: Actividad sospechosa'),
+                        if (incident['tipo'] == 'disturbio')
                           const Text('Categoría de la incidencia: Disturbios'),
-                        if (incident['tipo']=='incendio')
+                        if (incident['tipo'] == 'incendio')
                           const Text('Categoría de la incidencia: Incendio'),
-                        if (incident['tipo']=='cortes')
+                        if (incident['tipo'] == 'cortes')
                           const Text('Categoría de la incidencia: Corte de tránsito'),
-                        if (incident['tipo']=='portonazo')
+                        if (incident['tipo'] == 'portonazo')
                           const Text('Categoría de la incidencia: Portonazo'),
-                        if (incident['tipo']=='otro')
+                        if (incident['tipo'] == 'otro')
                           const Text('Categoría de la incidencia: Otro...'),
                       ],
                     ),

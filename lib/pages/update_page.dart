@@ -3,7 +3,7 @@ import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Asegúrate de tener esta importación
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/firebase.dart';
 
 class UpdatePage extends StatefulWidget {
@@ -14,24 +14,46 @@ class UpdatePage extends StatefulWidget {
 }
 
 class _UpdatePageState extends State<UpdatePage> {
-  TextEditingController clientController = TextEditingController(text: '');
-  TextEditingController fechaController = TextEditingController(text: '');
-  TextEditingController descController = TextEditingController(text: '');
-  TextEditingController tipoController = TextEditingController(text: '');
-  TextEditingController estadoController = TextEditingController(text: '');
-  TextEditingController locationController = TextEditingController(text: '');
+  final TextEditingController clientController = TextEditingController();
+  final TextEditingController fechaController = TextEditingController();
+  final TextEditingController descController = TextEditingController();
+  final TextEditingController tipoController = TextEditingController();
+  final TextEditingController estadoController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
   DateTime? fechaCierre;
   LatLng? incidentLocation;
 
   final DateFormat dateFormat = DateFormat('dd/MM/yyyy HH:mm:ss');
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final arguments = ModalRoute.of(context)!.settings.arguments as Set<dynamic>;
+      List<dynamic> argumentsList = arguments.toList();
+      final clienteData = argumentsList[0];
+      final fechaData = argumentsList[1];
+      final descData = argumentsList[3];
+      final tipoData = argumentsList[4];
+      final estadoData = argumentsList[5];
+      final imagen = argumentsList[6];
+      final ubicacion = argumentsList[7];
+
+      clientController.text = clienteData;
+      fechaController.text = fechaData;
+      descController.text = descData;
+      tipoController.text = tipoData;
+      estadoController.text = estadoData;
+      locationController.text = ubicacion ?? '';
+    });
+  }
+
   Future<Position> determinePosition() async {
-    LocationPermission permission;
-    permission = await Geolocator.checkPermission();
+    LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
+        throw Exception('Location permissions are denied');
       }
     }
     return await Geolocator.getCurrentPosition();
@@ -51,23 +73,6 @@ class _UpdatePageState extends State<UpdatePage> {
 
   @override
   Widget build(BuildContext context) {
-    final arguments = ModalRoute.of(context)!.settings.arguments as Set<dynamic>;
-    List<dynamic> argumentsList = arguments.toList();
-    final clienteData = argumentsList[0];
-    final fechaData = argumentsList[1];
-    final descData = argumentsList[3];
-    final tipoData = argumentsList[4];
-    final estadoData = argumentsList[5];
-    final imagen = argumentsList[6];
-    final ubicacion = argumentsList[7];
-
-    clientController.text = clienteData;
-    fechaController.text = fechaData;
-    descController.text = descData;
-    tipoController.text = tipoData;
-    estadoController.text = estadoData;
-    locationController.text = ubicacion ?? '';
-
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.redAccent,
@@ -93,6 +98,8 @@ class _UpdatePageState extends State<UpdatePage> {
           );
 
           if (confirmed ?? false) {
+            final arguments = ModalRoute.of(context)!.settings.arguments as Set<dynamic>;
+            List<dynamic> argumentsList = arguments.toList();
             await deleteIncident(argumentsList[2]);
             Navigator.pop(context);
           }
@@ -139,9 +146,7 @@ class _UpdatePageState extends State<UpdatePage> {
                   border: Border.all(color: Colors.black),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: imagen != ''
-                    ? Image.network(imagen)
-                    : const Center(
+                child: const Center(
                   child: Text(
                     "Imagen no seleccionada",
                     style: TextStyle(
@@ -168,6 +173,8 @@ class _UpdatePageState extends State<UpdatePage> {
                   final newEstado = estadoController.text == 'Abierta' ? 'Cerrada' : 'Abierta';
                   final newFechaCierre = newEstado == 'Cerrada' ? dateFormat.format(DateTime.now()) : null;
 
+                  final arguments = ModalRoute.of(context)!.settings.arguments as Set<dynamic>;
+                  List<dynamic> argumentsList = arguments.toList();
                   await updateState(argumentsList[2], newEstado, newFechaCierre);
                   setState(() {
                     estadoController.text = newEstado;
@@ -196,6 +203,8 @@ class _UpdatePageState extends State<UpdatePage> {
                     geoPoint = GeoPoint(locationToUse.latitude, locationToUse.longitude);
                   }
 
+                  final arguments = ModalRoute.of(context)!.settings.arguments as Set<dynamic>;
+                  List<dynamic> argumentsList = arguments.toList();
                   await updateIncident(
                     argumentsList[2],
                     clientController.text,
@@ -204,8 +213,13 @@ class _UpdatePageState extends State<UpdatePage> {
                     tipoController.text,
                     estadoController.text,
                     fechaCierre != null ? dateFormat.format(fechaCierre!) : null,
-                    geoPoint, // Pasar GeoPoint en lugar de LatLng
-                  ).then((value) => Navigator.pop(context));
+                    geoPoint,
+                  ).then((value) {
+                    setState(() {
+                      locationController.text = '${locationToUse?.latitude}, ${locationToUse?.longitude}';
+                    });
+                    Navigator.pop(context);
+                  });
                 },
                 child: const Text('Actualizar'),
               ),
@@ -216,3 +230,4 @@ class _UpdatePageState extends State<UpdatePage> {
     );
   }
 }
+
