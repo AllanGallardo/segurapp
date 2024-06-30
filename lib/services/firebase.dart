@@ -20,14 +20,16 @@ Future<List> getIncidents() async {
       'estado': docData['estado'],
       'imagen': docData['imagen'],
       'fechaCierre': docData['fechaCierre'],
-      'ubicacion': docData['ubicacion'] is GeoPoint ?
-      '${(docData['ubicacion'] as GeoPoint).latitude}, ${(docData['ubicacion'] as GeoPoint).longitude}' : null,
+      'ubicacion': docData['ubicacion'] is GeoPoint
+          ? LatLng((docData['ubicacion'] as GeoPoint).latitude, (docData['ubicacion'] as GeoPoint).longitude)
+          : null,
     };
     incidents.add(incidencia);
   }
 
   return incidents;
 }
+
 
 // CRUD CREATE
 Future<void> createIncident(String cliente, String fecha, String descripcion, String tipo, String estado, String linkImagen, LatLng? incidentLocation) async {

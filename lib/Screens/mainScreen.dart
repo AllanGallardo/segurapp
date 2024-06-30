@@ -1,12 +1,11 @@
-// ignore_for_file: file_names
-
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:segurapp/Screens/navbar.dart';
+import 'package:segurapp/services/firebase.dart'; // Importar el servicio que obtendrá las incidencias
 
-// ignore: constant_identifier_names
+
 const MAPBOX_ACCESS_TOKEN =
     'sk.eyJ1IjoiYWJ1cmlrIiwiYSI6ImNsd3k5ZWdlZzFqbDUybXB6NXFiaDRpMnEifQ.BzLqhvgP3XxaD3Vk1mAxzA';
 
@@ -14,13 +13,14 @@ class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
+
   _MainPageState createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
   LatLng? myPosition;
   late MapController mapController;
+  List<dynamic> incidents = [];
 
   Future<Position> determinePosition() async {
     LocationPermission permission;
@@ -49,6 +49,69 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     mapController = MapController();
     getCurrentLocation();
+    loadIncidents(); // Cargar las incidencias al iniciar
+  }
+
+  Future<void> loadIncidents() async {
+    var loadedIncidents = await getIncidents(); // Llamar al servicio para obtener las incidencias
+    setState(() {
+      incidents = loadedIncidents;
+    });
+  }
+
+  Widget getIconForIncident(String type) {
+    switch (type) {
+      case 'robo':
+        return Icon(Icons.local_police, color: Colors.red, size: 40);
+      case 'accidente':
+        return Icon(Icons.car_crash, color: Colors.orange, size: 40);
+      case 'violencia':
+        return Icon(Icons.warning, color: Colors.purple, size: 40);
+      case 'incendio':
+        return Icon(Icons.fire_extinguisher, color: Colors.red, size: 40);
+      case 'extravio':
+        return Icon(Icons.search, color: Colors.blue, size: 40);
+      case 'sospecha':
+        return Icon(Icons.help, color: Colors.yellow, size: 40);
+      case 'disturbio':
+        return Icon(Icons.warning_amber, color: Colors.deepOrange, size: 40);
+      case 'corte':
+        return Icon(Icons.block, color: Colors.black, size: 40);
+      case 'portazo':
+        return Icon(Icons.car_crash_outlined, color: Colors.redAccent, size: 40);
+      case 'otro':
+        return Icon(Icons.report, color: Colors.grey, size: 40);
+      default:
+        return Icon(Icons.location_on, color: Colors.blue, size: 40);
+    }
+  }
+
+  void showIncidentDetails(BuildContext context, dynamic incident) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Detalle de Incidencia'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text('Tipo: ${incident['tipo']}'),
+              Text('Descripción: ${incident['descripcion']}'),
+              Text('Fecha: ${incident['fecha']}'),
+              // Añadir más detalles según sea necesario
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cerrar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -99,9 +162,28 @@ class _MainPageState extends State<MainPage> {
                       color: Color.fromARGB(255, 104, 144, 212),
                       size: 40,
                     ),
-                  )
+                  ),
+                  ...incidents.map((incident) {
+                    if (incident['ubicacion'] != null) {
+                      return Marker(
+                        width: 80.0,
+                        height: 80.0,
+                        point: incident['ubicacion'],
+                        child: GestureDetector(
+                          onTap: () => showIncidentDetails(context, incident),
+                          child: getIconForIncident(incident['tipo']),
+                        ),
+                      );
+                    }
+                    return Marker(
+                      width: 0.0,
+                      height: 0.0,
+                      point: LatLng(0, 0),
+                      child: Container(), // Placeholder para ubicaciones nulas
+                    );
+                  }).toList(),
                 ],
-              )
+              ),
             ],
           ),
           Positioned(
