@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, use_build_context_synchronously
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -14,14 +14,18 @@ class RegistroPage extends StatefulWidget {
 class _RegistroPageState extends State<RegistroPage> {
   final FirebaseAuthServices _auth = FirebaseAuthServices();
   final _formKey = GlobalKey<FormState>();
-  final _usuarioController = TextEditingController();
+  final _nombreController = TextEditingController();
+  final _apellidoController = TextEditingController();
+  final _telefonoController = TextEditingController();
   final _emailController = TextEditingController();
   final _contrasenaController = TextEditingController();
   final _confirmarContrasenaController = TextEditingController();
 
   @override
   void dispose() {
-    _usuarioController.dispose();
+    _nombreController.dispose();
+    _apellidoController.dispose();
+    _telefonoController.dispose();
     _emailController.dispose();
     _contrasenaController.dispose();
     _confirmarContrasenaController.dispose();
@@ -133,7 +137,7 @@ class _RegistroPageState extends State<RegistroPage> {
                     ElevatedButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          bool success = await _signUp(context);
+                          bool success = await _signUp();
                           if (success) {
                             if (context.mounted) {
                               Navigator.pop(context);
@@ -192,7 +196,7 @@ class _RegistroPageState extends State<RegistroPage> {
     String password = _contrasenaController.text;
 
     try {
-      User? user = await _auth.signUpWithEmailAndPassword(email, password);
+      User? user = await _auth.signUpWithEmailAndPassword(email, password, nombre, apellido, telefono);
       if (user != null) {
         print('Usuario registrado con éxito');
         return true;

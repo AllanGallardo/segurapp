@@ -1,17 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:latlong2/latlong.dart';
 
 FirebaseFirestore db = FirebaseFirestore.instance;
 
-
-//CRUD READ
+// CRUD READ
 Future<List> getIncidents() async {
   List incidents = [];
-  //Crear referencia apuntando a la tabla
   CollectionReference collectionReferenceIncidents = db.collection('incidencia');
-  //Generar la query para leer todos los datos
   QuerySnapshot queryIncidents = await collectionReferenceIncidents.get();
 
-  for (var doc in queryIncidents.docs) { 
+  for (var doc in queryIncidents.docs) {
     final Map<String, dynamic> docData = doc.data() as Map<String, dynamic>;
     final incidencia = {
       'cliente': docData['cliente'],
@@ -21,6 +19,7 @@ Future<List> getIncidents() async {
       'tipo': docData['tipo'],
       'estado': docData['estado'],
       'imagen': docData['imagen'],
+      'fechaCierre': docData['fechaCierre'],
     };
     incidents.add(incidencia);
   }
@@ -28,8 +27,8 @@ Future<List> getIncidents() async {
   return incidents;
 }
 
-//CRUD CREATE
-Future<void> createIncident(String cliente, String fecha, String descripcion, String tipo, String estado, String linkImagen) async {
+// CRUD CREATE
+Future<void> createIncident(String cliente, String fecha, String descripcion, String tipo, String estado, String linkImagen, LatLng posicion) async {
   await db.collection('incidencia').add({
     'cliente': cliente,
     'fecha': fecha,
@@ -37,28 +36,32 @@ Future<void> createIncident(String cliente, String fecha, String descripcion, St
     'tipo': tipo,
     'estado': estado,
     'imagen': linkImagen,
+    'fechaCierre': null,
+    'ubicacion': GeoPoint(posicion.latitude, posicion.longitude),
   });
 }
 
-//CRUD UPDATE
-Future<void> updateIncident(String id ,String cliente, String fecha, String descripcion, String tipo, String estado) async {
+// CRUD UPDATE
+Future<void> updateIncident(String id, String cliente, String fecha, String descripcion, String tipo, String estado, String? fechaCierre) async {
   await db.collection('incidencia').doc(id).update({
     'cliente': cliente,
     'fecha': fecha,
     'descripcion': descripcion,
     'tipo': tipo,
     'estado': estado,
+    'fechaCierre': fechaCierre,
   });
 }
 
-//CRUD DELETE
+// CRUD DELETE
 Future<void> deleteIncident(String id) async {
   await db.collection('incidencia').doc(id).delete();
 }
 
-//Actualizacion Estado
-Future<void> updateState(String id, String estado) async {
+// Actualización Estado
+Future<void> updateState(String id, String estado, String? fechaCierre) async {
   await db.collection('incidencia').doc(id).update({
     'estado': estado,
+    'fechaCierre': fechaCierre,
   });
 }
