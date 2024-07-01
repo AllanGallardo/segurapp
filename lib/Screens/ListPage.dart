@@ -4,10 +4,7 @@ import 'package:segurapp/services/firebase.dart';
 import 'package:segurapp/Screens/ListPage_Deploy.dart';
 
 class Feed extends StatefulWidget {
-  const Feed({
-    super.key,
-  });
-
+  const Feed({super.key,});
   @override
   State<Feed> createState() => _FeedState();
 }

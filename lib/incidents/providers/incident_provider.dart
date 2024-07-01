@@ -1,17 +1,15 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
 class IncidentProvider extends ChangeNotifier{
   //Variables
-  final List<LatLng> _incidentLocation = [];
+  LatLng _incidentLocation = const LatLng(0, 0);
   //Getters
   void getLocation( LatLng myPosition ) {
-    _incidentLocation.add(myPosition);
+    _incidentLocation = myPosition;
     notifyListeners();
   }
 
-  LatLng get incidentLocation => _incidentLocation.last;
+  LatLng get incidentLocation => _incidentLocation;
 
 }

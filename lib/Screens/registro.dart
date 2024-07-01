@@ -14,7 +14,7 @@ class RegistroPage extends StatefulWidget {
 class _RegistroPageState extends State<RegistroPage> {
   final FirebaseAuthServices _auth = FirebaseAuthServices();
   final _formKey = GlobalKey<FormState>();
-  final _nombreController = TextEditingController();
+  final _usuarioController = TextEditingController();
   final _apellidoController = TextEditingController();
   final _telefonoController = TextEditingController();
   final _emailController = TextEditingController();
@@ -23,7 +23,7 @@ class _RegistroPageState extends State<RegistroPage> {
 
   @override
   void dispose() {
-    _nombreController.dispose();
+    _usuarioController.dispose();
     _apellidoController.dispose();
     _telefonoController.dispose();
     _emailController.dispose();
@@ -137,7 +137,7 @@ class _RegistroPageState extends State<RegistroPage> {
                     ElevatedButton(
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          bool success = await _signUp();
+                          bool success = await _signUp(context);
                           if (success) {
                             if (context.mounted) {
                               Navigator.pop(context);
@@ -196,7 +196,7 @@ class _RegistroPageState extends State<RegistroPage> {
     String password = _contrasenaController.text;
 
     try {
-      User? user = await _auth.signUpWithEmailAndPassword(email, password, nombre, apellido, telefono);
+      User? user = await _auth.signUpWithEmailAndPassword(email, password);
       if (user != null) {
         print('Usuario registrado con éxito');
         return true;

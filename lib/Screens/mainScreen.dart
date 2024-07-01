@@ -57,6 +57,7 @@ class _MainPageState extends State<MainPage> {
     IncidentProvider incidentProvider = context.watch<IncidentProvider>();
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         centerTitle: true,
         title: const Text('SegurApp'),
         backgroundColor: Colors.blue,
