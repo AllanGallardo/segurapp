@@ -32,6 +32,18 @@ class _RegistroPageState extends State<RegistroPage> {
     super.dispose();
   }
 
+  Widget formItemsDesign(IconData icon, Widget item) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Card(
+        child: ListTile(
+          leading: Icon(icon),
+          title: item,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,90 +64,74 @@ class _RegistroPageState extends State<RegistroPage> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    TextFormField(
-                      controller: _nombreController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nombre',
+                    formItemsDesign(
+                      Icons.person,
+                      TextFormField(
+                        controller: _usuarioController,
+                        decoration: const InputDecoration(
+                          labelText: 'Nombre de usuario',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor ingresa tu nombre de usuario';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu nombre';
-                        }
-                        return null;
-                      },
                     ),
-                    TextFormField(
-                      controller: _apellidoController,
-                      decoration: const InputDecoration(
-                        labelText: 'Apellido',
+                    formItemsDesign(
+                      Icons.email,
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Correo electrónico',
+                        ),
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor ingresa tu correo electrónico';
+                          }
+                          if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                            return 'Por favor ingresa un correo electrónico válido';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu apellido';
-                        }
-                        return null;
-                      },
                     ),
-                    TextFormField(
-                      controller: _telefonoController,
-                      decoration: const InputDecoration(
-                        labelText: 'Teléfono',
+                    formItemsDesign(
+                      Icons.lock,
+                      TextFormField(
+                        controller: _contrasenaController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Contraseña',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor ingresa tu contraseña';
+                          }
+                          return null;
+                        },
                       ),
-                      keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu teléfono';
-                        }
-                        return null;
-                      },
                     ),
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Correo electrónico',
+                    formItemsDesign(
+                      Icons.lock,
+                      TextFormField(
+                        controller: _confirmarContrasenaController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Confirmar contraseña',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor confirma tu contraseña';
+                          }
+                          if (value != _contrasenaController.text) {
+                            return 'Las contraseñas no coinciden';
+                          }
+                          return null;
+                        },
                       ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu correo electrónico';
-                        }
-                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                          return 'Por favor ingresa un correo electrónico válido';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: _contrasenaController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Contraseña',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu contraseña';
-                        }
-                        if (value.length < 6) {
-                          return 'La contraseña debe tener al menos 6 caracteres';
-                        }
-                        return null;
-                      },
-                    ),
-                    TextFormField(
-                      controller: _confirmarContrasenaController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Confirmar contraseña',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor confirma tu contraseña';
-                        }
-                        if (value != _contrasenaController.text) {
-                          return 'Las contraseñas no coinciden';
-                        }
-                        return null;
-                      },
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
@@ -143,14 +139,14 @@ class _RegistroPageState extends State<RegistroPage> {
                         if (_formKey.currentState!.validate()) {
                           bool success = await _signUp();
                           if (success) {
-                            if(context.mounted){
+                            if (context.mounted) {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Usuario registrado con éxito')),
                               );
                             }
                           } else {
-                            if(context.mounted){
+                            if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Error al registrar usuario')),
                               );
@@ -158,6 +154,13 @@ class _RegistroPageState extends State<RegistroPage> {
                           }
                         }
                       },
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.lightBlue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30.0),
+                        ),
+                      ),
                       child: const Text('Registrar'),
                     ),
                   ],
@@ -188,10 +191,7 @@ class _RegistroPageState extends State<RegistroPage> {
     );
   }
 
-Future<bool> _signUp() async {
-    String nombre = _nombreController.text;
-    String apellido = _apellidoController.text;
-    String telefono = _telefonoController.text;
+  Future<bool> _signUp(BuildContext context) async {
     String email = _emailController.text;
     String password = _contrasenaController.text;
 
@@ -223,7 +223,7 @@ Future<bool> _signUp() async {
           errorMessage = 'Ocurrió un error desconocido.';
       }
       print('Error de registro: ${e.message}');
-      if(context.mounted){
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error de registro: $errorMessage')),
         );
@@ -231,7 +231,7 @@ Future<bool> _signUp() async {
       return false;
     } catch (e) {
       print('Error de registro: $e');
-      if(context.mounted){
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error de registro: $e')),
         );

@@ -59,7 +59,7 @@ class _MainPageState extends State<MainPage> {
       appBar: AppBar(
         centerTitle: true,
         title: const Text('SegurApp'),
-        backgroundColor: Colors.blueAccent,
+        backgroundColor: Colors.blue,
       ),
       body: Stack(
         children: <Widget>[
@@ -108,6 +108,18 @@ class _MainPageState extends State<MainPage> {
                   )
                 ],
               ),
+            Positioned(
+            top: 10.0,
+            left: 10.0,
+            child: FloatingActionButton(
+              onPressed: () {
+              Navigator.pushNamed(context, '/editarperfil'); // Cambio aquí
+              },
+              backgroundColor: Colors.blueGrey,
+              child: const Icon(Icons.manage_accounts, size: 40), // Cambio aquí
+              shape: CircleBorder(),
+            ),
+            ),
           Positioned(
             top: 10.0,
             right: 10.0,
